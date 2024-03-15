@@ -5,18 +5,15 @@ import Ecommerce from "./../screens/Ecommerce";
 import CameraScreen from "../screens/Camera";
 import OnboardingScreen from "../screens/Onboarding";
 import Index from "../screens/Index";
+import SearchPage from "../screens/SearchPage";
+import DetailsScreen from "../screens/DetailsScreen";
+import { Animated } from "react-native";
+import Shop from "../screens/Shop";
+import ProductDetails from "../screens/ProductDetails";
 function RootStack() {
   const Stack = createStackNavigator();
   return (
     <Stack.Navigator>
-      <Stack.Screen
-        options={{
-          headerShown: false,
-          gestureEnabled: true,
-        }}
-        name="Index"
-        component={Index}
-      />
       <Stack.Screen
         options={{
           headerShown: false,
@@ -28,15 +25,56 @@ function RootStack() {
       <Stack.Screen
         options={{
           headerShown: false,
+          // gestureEnabled: true,
+        }}
+        name="Index"
+        component={Index}
+      />
+      <Stack.Screen
+        options={{
+          headerShown: false,
           gestureEnabled: true,
         }}
         name="Home"
         // component={Index}
         component={Home}
       />
-
       <Stack.Screen
-        // options={{ headerShown: false }}
+        name="Details"
+        // component={Index}
+        component={DetailsScreen}
+        options={{
+          headerShown: false,
+          gestureEnabled: true,
+          gestureDirection: "horizontal",
+          gestureResponseDistance: 150,
+          cardStyleInterpolator: ({ current, next, layouts }) => {
+            return {
+              cardStyle: {
+                transform: [
+                  {
+                    translateX: current.progress.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [layouts.screen.width, 0],
+                      extrapolateRight: "clamp",
+                    }),
+                  },
+                ],
+              },
+            };
+          },
+        }}
+      />
+      <Stack.Screen
+        options={{
+          headerShown: false,
+          gestureEnabled: true,
+        }}
+        name="Search"
+        // component={Index}
+        component={SearchPage}
+      />
+      <Stack.Screen
         name="Media"
         component={SocialMedia}
         options={{
@@ -62,7 +100,6 @@ function RootStack() {
         }}
       />
       <Stack.Screen
-        // options={{ headerShown: false }}
         name="Shops"
         component={Ecommerce}
         options={{
@@ -90,6 +127,56 @@ function RootStack() {
       <Stack.Screen
         name="Camera"
         component={CameraScreen}
+        options={{
+          headerShown: false,
+          gestureEnabled: true,
+          gestureDirection: "horizontal",
+          gestureResponseDistance: 150,
+          cardStyleInterpolator: ({ current, next, layouts }) => {
+            return {
+              cardStyle: {
+                transform: [
+                  {
+                    translateX: current.progress.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [layouts.screen.width, 0],
+                      extrapolateRight: "clamp",
+                    }),
+                  },
+                ],
+              },
+            };
+          },
+        }}
+      />
+      <Stack.Screen
+        name="Shop"
+        component={Shop}
+        options={{
+          headerShown: false,
+          gestureEnabled: true,
+          gestureDirection: "horizontal",
+          gestureResponseDistance: 150,
+          cardStyleInterpolator: ({ current, next, layouts }) => {
+            return {
+              cardStyle: {
+                transform: [
+                  {
+                    translateX: current.progress.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [layouts.screen.width, 0],
+                      extrapolateRight: "clamp",
+                    }),
+                  },
+                ],
+              },
+            };
+          },
+        }}
+      />
+      <Stack.Screen
+        name="ProductDetails"
+        component={ProductDetails}
         options={{
           headerShown: false,
           gestureEnabled: true,

@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   TextInput,
   ImageBackground,
-  useWindowDimensions
+  useWindowDimensions,
 } from "react-native";
 import React, { useCallback, useRef } from "react";
 import Animated, {
@@ -123,7 +123,7 @@ const Chat = () => {
     <View className="flex flex-col items-center justify-evenly h-96 w-[80%] bg-slate-50 rounded-xl p-2">
       <View className="w-full flex flex-row items-center justify-between">
         <View>
-          <Text className="font-bold text-slate-800">Joshua simon</Text>
+          <Text className="font-bold text-slate-800">Headrick</Text>
           <Text className="font-semibold text-slate-600">Mbeya Tanzania</Text>
         </View>
         <Image
@@ -206,7 +206,7 @@ const SocialMedia = () => {
       className="bg-slate-200"
       contentContainerStyle={{
         display: "flex",
-        paddingTop:windowHeight*0.05
+        paddingTop: windowHeight * 0.05,
       }}
       showsVerticalScrollIndicator={false}
     >

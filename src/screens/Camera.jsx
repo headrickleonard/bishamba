@@ -1,5 +1,5 @@
 import { Camera, CameraType, FlashMode } from "expo-camera";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import {
   Button,
   StyleSheet,
@@ -11,11 +11,19 @@ import {
 } from "react-native";
 import * as MediaLibrary from "expo-media-library";
 import buttonIcon from "../assets/icons/button.png";
-import { requestMediaLibraryPermissionsAsync } from "expo-image-picker";
+import {
+  requestMediaLibraryPermissionsAsync,
+  requestCameraPermissionsAsync,
+} from "expo-image-picker";
 import * as ImagePicker from "expo-image-picker";
 import BottomSheet from "react-native-raw-bottom-sheet";
 import { PinchGestureHandler, State } from "react-native-gesture-handler";
 import LoopText from "react-native-loop-text";
+import CustomDialog from "../components/Dialog";
+import { IconButton } from "react-native-paper";
+import { useFocusEffect } from "@react-navigation/native"; // Import useFocusEffect
+import { useIsFocused } from "@react-navigation/native";
+
 
 export default function CameraScreen({ navigation }) {
   const [type, setType] = useState(CameraType.back);
@@ -25,27 +33,82 @@ export default function CameraScreen({ navigation }) {
   const [selectedMedia, setSelectedMedia] = useState([]);
   const [zoom, setZoom] = useState(0);
   const [imageUri, setImageUri] = useState(null);
+  const [isCameraReady, setIsCameraReady] = useState(false);
 
-  // if (!permission) {
-  //   // Camera permissions are still loading
-  //   return <View />;
-  // }
+  //  custom dialog
+  const [errorDialogVisible, setErrorDialogVisible] = useState(false);
+  const [successDialogVisible, setSuccessDialogVisible] = useState(false);
+  const isFocused = useIsFocused(); // Hook to determine if the screen is focused
+
+  const showErrorDialog = () => {
+    setErrorDialogVisible(true);
+  };
+
+  const showSuccessDialog = () => {
+    setSuccessDialogVisible(true);
+  };
+
+  const hideErrorDialog = () => {
+    setErrorDialogVisible(false);
+  };
+
+  const hideSuccessDialog = () => {
+    setSuccessDialogVisible(false);
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      // Reinitialize camera when ScreenA gains focus
+      return () => {
+        if (Camera) {
+          // Camera; // Release camera resources
+        }
+      };
+    }, [Camera])
+  );
 
   const requestPermissions = async () => {
-    const { status } = await requestMediaLibraryPermissionsAsync();
+    // const { status } = await requestMediaLibraryPermissionsAsync();
 
-    if (status !== "granted") {
-      console.error("Permission to access media library denied");
+    // if (status !== "granted") {
+    //   console.error("Permission to access media library denied");
+    // }
+    const cameraPermission = await requestCameraPermissionsAsync();
+    const mediaLibraryPermission = await requestMediaLibraryPermissionsAsync();
+
+    if (
+      cameraPermission.status !== "granted" ||
+      mediaLibraryPermission.status !== "granted"
+    ) {
+      console.error("Permission to access camera or media library denied");
+    }
+  };
+   const initializeCamera = async () => {
+    if (!isCameraReady) {
+      try {
+        const { status } = await Camera.requestCameraPermissionsAsync();
+        if (status === "granted") {
+          setIsCameraReady(true);
+        }
+      } catch (error) {
+        console.error("Error initializing camera:", error);
+      }
     }
   };
   useEffect(() => {
     requestPermissions();
   }, []);
+
+   useEffect(() => {
+    if (isFocused) {
+      initializeCamera(); // Reinitialize the camera when the screen gains focus
+    }
+  }, [isFocused]);
   const openGallery = async () => {
     try {
       const media = await ImagePicker.launchImageLibraryAsync({
-        // mediaTypes: ImagePicker.MediaTypeOptions.All,
-        // allowsEditing: true,
+        mediaTypes: ImagePicker.MediaTypeOptions.All,
+        allowsEditing: true,
         quality: 1,
         // allowsMultipleSelection: true,//allowsEditing cannot be done when allowsMultipleSelection is set to true
         // selectionLimit: 6,
@@ -58,7 +121,8 @@ export default function CameraScreen({ navigation }) {
       if (!media.canceled || !media.error) {
         // setSelectedMedia([...selectedMedia, ...media.selected]);
         // setSelectedMedia(media.assets[0].uri);
-        bottomSheetRef.current.open();
+        // bottomSheetRef.current.open();
+        navigation.navigate("Details", { photo: media.uri });
       }
       setImageUri(null);
     } catch (error) {
@@ -72,6 +136,9 @@ export default function CameraScreen({ navigation }) {
       current === CameraType.back ? CameraType.front : CameraType.back
     );
   }
+  const handleCameraReady = () => {
+    setIsCameraReady(true);
+  };
 
   // async function takePhoto() {
   //   if (cameraRef.current) {
@@ -101,7 +168,7 @@ export default function CameraScreen({ navigation }) {
   // };
 
   const takePhoto = async () => {
-    if (cameraRef.current) {
+    if (cameraRef.current && isCameraReady) {
       try {
         const options = {
           quality: 1, // Image quality (0 to 1)
@@ -112,7 +179,9 @@ export default function CameraScreen({ navigation }) {
         const data = await cameraRef.current.takePictureAsync(options);
         console.log(data.uri);
         setImageUri(data.uri);
-        bottomSheetRef.current.open();
+        // bottomSheetRef.current.open();
+        initializeCamera()
+        navigation.navigate("Details", { photo: data.uri });
       } catch (error) {
         console.error("Failed to take picture:", error);
       }
@@ -161,7 +230,38 @@ export default function CameraScreen({ navigation }) {
       setZoom(newZoom);
     }
   };
+  const Dialogger = () => {
+    return (
+      <View style={styles.container}>
+        <IconButton
+          icon="alert-circle"
+          color="#FF5733"
+          size={30}
+          onPress={showErrorDialog}
+        />
+        <IconButton
+          icon="check-circle"
+          color="#33FF6B"
+          size={30}
+          onPress={showSuccessDialog}
+        />
 
+        <CustomDialog
+          visible={errorDialogVisible}
+          onDismiss={hideErrorDialog}
+          type="error"
+          message="An error occurred. Please try again."
+        />
+
+        <CustomDialog
+          visible={successDialogVisible}
+          onDismiss={hideSuccessDialog}
+          type="success"
+          message="Success! Action completed successfully."
+        />
+      </View>
+    );
+  };
   return (
     <View style={styles.container}>
       <PinchGestureHandler onGestureEvent={handlePinchGesture}>
@@ -171,6 +271,8 @@ export default function CameraScreen({ navigation }) {
           zoom={zoom}
           ratio="1:1"
           ref={cameraRef}
+          autoFocus
+          onCameraReady={handleCameraReady}
         >
           <View style={styles.frame}>
             <BottomSheet
@@ -234,6 +336,7 @@ export default function CameraScreen({ navigation }) {
             source={require("../assets/icons/info.png")}
             className=" h-12 w-12"
           />
+          {/* <Dialogger /> */}
         </TouchableOpacity>
       </View>
     </View>
@@ -249,7 +352,6 @@ const styles = StyleSheet.create({
   },
   camera: {
     flex: 1,
-   
   },
   buttonContainer: {
     flex: 1,

@@ -1,4 +1,4 @@
-import { StyleSheet, TouchableWithoutFeedback } from "react-native";
+import { StyleSheet, TouchableWithoutFeedback,TouchableOpacity } from "react-native";
 import React from "react";
 import Animated, {
   useAnimatedStyle,
@@ -6,6 +6,8 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { useNavigation } from "@react-navigation/native";
+import { TouchableRipple } from 'react-native-paper';
+
 const CustomButton = ({ flatListRef, flatListIndex, dataLength }) => {
   const navigation = useNavigation();
 
@@ -54,7 +56,7 @@ const CustomButton = ({ flatListRef, flatListIndex, dataLength }) => {
         if (flatListIndex.value < dataLength - 1) {
           flatListRef.current.scrollToIndex({ index: flatListIndex.value + 1 });
         } else {
-          navigation.navigate("Home");
+          navigation.navigate("Index");
         }
       }}
     >

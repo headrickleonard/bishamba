@@ -16,9 +16,9 @@ export default function Index() {
 
   const [index, setIndex] = React.useState(0);
   const [routes] = React.useState([
-    { key: "media", title: "Community" },
-    { key: "home", title: "Home" },
     { key: "shops", title: "Shops" },
+    { key: "home", title: "Home" },
+    { key: "media", title: "Community" }
   ]);
   
   return (
@@ -27,6 +27,7 @@ export default function Index() {
       renderScene={renderScene}
       onIndexChange={setIndex}
       initialLayout={{ width: layout.width }}
+      initialPage={1}
       renderTabBar={renderTabBar} // Render an empty tab bar
       
     />

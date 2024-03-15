@@ -1,3 +1,7 @@
+import icon1 from "../assets/images/dawa.png";
+import icon2 from "../assets/images/dawa2.png";
+import icon3 from "../assets/images/dawa3.png";
+
 export const data = [
   {
     id: 1,
@@ -40,5 +44,29 @@ export const toolCategories = [
     description: "cultivator,pianter,harvester,sprayers",
     name: "Machines",
     icon: require("../assets/images/tractor.png"),
+  },
+];
+export const chemicalsData = [
+  {
+    id: 1,
+    description:
+      "EduFund is democratizing access to quality education for underserved young talents, with the aim of catalyzing Africa’s economy by enabling Africa’s young",
+    icon: icon1,
+    price: "12,000/=Tsh",
+    name: "product1 name",
+  },
+  {
+    id: 2,
+    description: "description2",
+    icon: icon2,
+    price: "45,000/=Tsh",
+    name: "product2 name",
+  },
+  {
+    id: 3,
+    description: "description3",
+    icon: icon3,
+    price: "17,500/=Tsh",
+    name: "product3 name",
   },
 ];

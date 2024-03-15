@@ -14,10 +14,18 @@ import React, { useState } from "react";
 import { toolCategories } from "../utils";
 import { AnimatedScrollView } from "@kanelloc/react-native-animated-header-scroll-view";
 const dp = require("../assets/icons/cabbage.png");
+import { useNavigation } from "@react-navigation/native";
 
 const ShopProfile = ({ shopAvatar, shopName }) => {
+  const navigation = useNavigation();
   return (
-    <View className="flex flex-col items-center justify-evenly h-24 w-24 my-4 bg-white border border-slate-200 rounded-lg">
+    <TouchableOpacity
+      className="flex flex-col items-center justify-evenly h-24 w-24 my-4 bg-white border border-slate-200 rounded-lg"
+      onPress={() => {
+        // console.log("pressed..")
+        navigation.navigate("Shop");
+      }}
+    >
       <Image
         source={shopAvatar}
         className="h-12 w-12 rounded-full -mt-8"
@@ -27,7 +35,7 @@ const ShopProfile = ({ shopAvatar, shopName }) => {
         {shopName}
       </Text>
       <Text className="text-slate-500">5km</Text>
-    </View>
+    </TouchableOpacity>
   );
 };
 const ViewAll = () => {
@@ -70,11 +78,15 @@ const ShopItem = ({ item }) => {
         flexDirection: "row",
         width: "100%",
         marginVertical: 2,
-        padding: 1,
+        padding: 2,
       }}
-      className="bg-slate-200"
+      className="bg-slate-200 rounded-xl"
     >
-      <Image source={item.image} style={{ height: 48, width: "15%" }} />
+      <Image
+        source={item.image}
+        style={{ height: 48, width: "15%" }}
+        className="m-1"
+      />
       <View
         style={{
           flex: 1,
@@ -129,9 +141,13 @@ const HeaderComponent = () => {
   );
 };
 const TopNavBar = () => {
+  const navigation = useNavigation();
   return (
     <View className="bg-neutral-100 w-full">
-      <Pressable className="w-[94%] mx-3 mb-2 mt-8 h-12 rounded-full bg-slate-200 flex flex-row items-center justify-stretch p-1">
+      <Pressable
+        className="w-[94%] mx-3 mb-2 mt-8 h-12 rounded-full bg-slate-200 flex flex-row items-center justify-stretch p-1"
+        // onPress={navigation.navigate("Search")}
+      >
         <Image
           source={require("../assets/icons/search.png")}
           className="h-4 w-4 ml-2"
@@ -141,6 +157,13 @@ const TopNavBar = () => {
     </View>
   );
 };
+const TopLabel=()=>{
+  return(
+    <View>
+      <Text>search for anything</Text>
+    </View>
+  )
+}
 const Ecommerce = () => {
   const height = Dimensions.get("window").height;
   const width = Dimensions.get("window").width;
@@ -172,6 +195,7 @@ const Ecommerce = () => {
   ];
   const data = Array.from(Array(50).keys());
   const [fadeAnim] = useState(new Animated.Value(1)); // Initial fade animation value
+  const navigation = useNavigation();
 
   const handleScroll = (event) => {
     const scrollPosition = event.nativeEvent.contentOffset.y;
@@ -201,19 +225,23 @@ const Ecommerce = () => {
   return (
     <AnimatedScrollView
       HeaderNavbarComponent={<HeaderComponent />}
-      TopNavBarComponent={<TopNavBar />}
+      // TopNavBarComponent={<TopNavBar />}
+      TopNavBarComponent={<TopLabel />}
       headerImage={require("../assets/images/terraces.jpeg")}
       // onScroll={handleScroll}
     >
       <ScrollView showsVerticalScrollIndicator={false} className="">
         <Animated.View style={{ opacity: fadeAnim }}>
-          <Pressable className="w-[94%] mx-3 mt-2 mb-8 h-12 rounded-full bg-slate-200 flex flex-row items-center justify-stretch p-1">
+          <TouchableOpacity
+            className="w-[94%] mx-3 mt-2 mb-8 h-12 rounded-full bg-slate-200 flex flex-row items-center justify-stretch p-1"
+            // onPress={navigation.replace('Search')}
+          >
             <Image
               source={require("../assets/icons/search.png")}
               className="h-4 w-4 ml-2"
             />
             <Text className="text-slate-400 mx-4">search products,stores</Text>
-          </Pressable>
+          </TouchableOpacity>
         </Animated.View>
         <View className="flex flex-row items-center justify-evenly flex-wrap mb-2 mt-4">
           <ShopProfile shopAvatar={dp} shopName={"agrovet shop"} />
