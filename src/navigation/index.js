@@ -10,26 +10,29 @@ import DetailsScreen from "../screens/DetailsScreen";
 import { Animated } from "react-native";
 import Shop from "../screens/Shop";
 import ProductDetails from "../screens/ProductDetails";
+import HomeScreen from "../screens/HomeScreen";
+import Details from './../screens/Details';
+
 function RootStack() {
   const Stack = createStackNavigator();
   return (
     <Stack.Navigator>
-      <Stack.Screen
+      {/* <Stack.Screen
         options={{
           headerShown: false,
           gestureEnabled: true,
         }}
         name="Onboarding"
         component={OnboardingScreen}
-      />
-      <Stack.Screen
+      /> */}
+      {/* <Stack.Screen
         options={{
           headerShown: false,
           // gestureEnabled: true,
         }}
         name="Index"
         component={Index}
-      />
+      /> */}
       <Stack.Screen
         options={{
           headerShown: false,
@@ -37,12 +40,21 @@ function RootStack() {
         }}
         name="Home"
         // component={Index}
-        component={Home}
+        // component={Home}
+      component={HomeScreen}
+      />
+      <Stack.Screen
+        options={{
+          headerShown: false,
+          gestureEnabled: true,
+        }}
+        name="ScanDetails"
+        component={DetailsScreen}
       />
       <Stack.Screen
         name="Details"
         // component={Index}
-        component={DetailsScreen}
+        component={Details}
         options={{
           headerShown: false,
           gestureEnabled: true,

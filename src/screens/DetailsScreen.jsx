@@ -1,14 +1,20 @@
-import React, { useState } from "react";
+import React, { useState,useRef } from "react";
 import { View, Image, StyleSheet, Dimensions, Text } from "react-native";
 import {
   GestureHandlerRootView,
   PinchGestureHandler,
   PinchGestureHandlerGestureEvent,
 } from "react-native-gesture-handler";
-import { ActivityIndicator, Button, Dialog, Portal,MD2Colors } from "react-native-paper";
+import {
+  ActivityIndicator,
+  Button,
+  Dialog,
+  Portal,
+  MD2Colors,
+} from "react-native-paper";
 import LoopText from "react-native-loop-text";
 import LottieView from "lottie-react-native";
-
+import RBSheet from "react-native-raw-bottom-sheet";
 
 import Animated, {
   useAnimatedGestureHandler,
@@ -16,69 +22,60 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
+import Feedback from "../components/form/Feedback";
 
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 const { width, height } = Dimensions.get("window");
-const open = false;
-// const[open,setOpen]=useState(false)
 
-const ScanningDialog = ({ visible, hideDialog }) => {
-  // const [visible, setVisible] = React.useState(false);
-  // const hideDialog = () => setVisible(false);
+
+const ScanningDialog = ({ visible, hideDialog, sheet }) => {
+  const openFeedbackSheet = () => {
+    if (sheet.current) {
+      hideDialog(); // Optionally hide the dialog after opening the sheet
+      sheet.current.open();
+    } else {
+      console.error('Sheet reference is not defined');
+    }
+  };
+
   return (
-    // <Portal>
-    //   <Dialog visible={visible} onDismiss={hideDialog}>
-    //     <Dialog.Actions>
-    //       <Button onPress={() => console.log("Cancel")}>Cancel</Button>
-    //       <Button onPress={() => console.log("Ok")}>Ok</Button>
-    //     </Dialog.Actions>
-    //   </Dialog>
-    // </Portal>
     <Portal>
-      <Dialog
-        visible={visible}
-        onDismiss={hideDialog}
-        className=" h-[40%] border-none outline-none rounded-lg border-green-500"
-      >
-        <Dialog.Icon icon="line-scan" />
-        <Dialog.Title className="text-center font-bold">
-        <LoopText
-          textArray={["scanning..", "analysing.."]}
-          className="text-black text-center font-bold text-3xl rounded-full"
-        />
+      <Dialog visible={visible} onDismiss={hideDialog} className="bg-black/50 border border-teal-500/20 rounded-md" >
+        {/* <Dialog.Icon icon="line-scan" /> */}
+        <Dialog.Title>
+          {/* <LoopText textArray={["scanning..", "analysing.."]} /> */}
         </Dialog.Title>
-        <Dialog.Content>
-          {/* <Text variant="bodyMedium">please be patient as we're analysing your plant</Text> */}
-          {/* <ActivityIndicator animating={true} className="mt-4" color={MD2Colors.green700}/> */}
-          {/* <Image source={require('../assets/images/scan.png')} className="h-full w-full -mt-12"/> */}
-          <View className="flex flex-row items-center justify-center">
-
-          <LottieView
-          source={require("../assets/anime/loader1.json")}
-          autoPlay
-          loop
-          style={{width:120,height:120,backgroundColor:"transparent"}}
-        />
+        <Dialog.Content className="">
+          <View style={{ flexDirection: "row", justifyContent: "center" }}>
+            <LottieView
+              source={require("../assets/anime/scan.json")}
+              autoPlay
+              loop
+              style={{
+                // width: 120,
+                height: 120,
+                backgroundColor: "transparent",
+              }}
+            />
           </View>
         </Dialog.Content>
         <Dialog.Actions>
-          <Button onPress={() => console.log("Cancel")} className=" text-white bg-red-500"
-          // loading
-          >Cancel</Button>
-          {/* <Button onPress={() => console.log("Ok")}>Ok</Button> */}
+          <Button
+            onPress={openFeedbackSheet}
+            style={{ backgroundColor: "red", color: "white" }}
+          >
+            Cancel
+          </Button>
         </Dialog.Actions>
       </Dialog>
     </Portal>
   );
 };
-function App({ imageUri }) {
+
+function App({ imageUri, showDialog }) {
   const scale = useSharedValue(1);
   const focalX = useSharedValue(0);
   const focalY = useSharedValue(0);
-  const [dialogVisible, setDialogVisible] = useState(false);
-
-  const showDialog = () => setDialogVisible(true);
-  const hideDialog = () => setDialogVisible(false);
 
   const pinchHandler = useAnimatedGestureHandler({
     onActive: (event) => {
@@ -107,34 +104,20 @@ function App({ imageUri }) {
     };
   });
 
-  const focalPointStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateX: focalX.value }, { translateY: focalY.value }],
-    };
-  });
-
   return (
     <PinchGestureHandler onGestureEvent={pinchHandler}>
-      <Animated.View style={{ height: "100%", width: "100%" }}>
-        <AnimatedImage
-          style={[{ flex: 1 }, rStyle]}
-          source={{ uri: imageUri }}
-        />
-        {/* <Animated.View style={[styles.focalPoint, focalPointStyle]} /> */}
-        <Animated.View
-          className=" w-full bg-transparent rounded-xl absolute bottom-0"
-          style={{ height: "20%" }}
-        >
+      <Animated.View style={{ height: '100%', width: '100%' }}>
+        <AnimatedImage style={[{ flex: 1 }, rStyle]} source={{ uri: imageUri }} />
+        <Animated.View style={{ height: '20%', backgroundColor: 'transparent', position: 'absolute', bottom: 0, width: '100%' }}>
           <Button
             icon="camera-iris"
             mode="contained-tonal"
             onPress={showDialog}
-            className="bg-green-500 w-[60%] ml-[25%] my-8"
-            labelStyle={{ color: "white" }}
+            style={{ backgroundColor: 'green', width: '60%', alignSelf: 'center', marginVertical: 16 }}
+            labelStyle={{ color: 'white' }}
           >
-            start scanning
+            Start Scanning
           </Button>
-          <ScanningDialog visible={dialogVisible} hideDialog={hideDialog} />
         </Animated.View>
       </Animated.View>
     </PinchGestureHandler>
@@ -143,18 +126,35 @@ function App({ imageUri }) {
 
 const DetailsScreen = ({ route }) => {
   const { photo } = route.params;
+  const sheet = useRef(null);
+  const [dialogVisible, setDialogVisible] = useState(false);
+  const showDialog = () => setDialogVisible(true);
+  const hideDialog = () => setDialogVisible(false);
 
   return (
     // <View style={styles.container}>
     //   <Image source={{ uri: photo }} style={styles.image} />
     // </View>
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <App imageUri={photo} />
+      <App imageUri={photo} showDialog={showDialog} />
+      <ScanningDialog
+        visible={dialogVisible}
+        hideDialog={hideDialog}
+        sheet={sheet}
+      />
+      <RBSheet
+        customStyles={{
+          container: { borderTopLeftRadius: 14, borderTopRightRadius: 14 },
+        }}
+        height={400}
+        openDuration={250}
+        ref={sheet}
+      >
+        <Feedback />
+      </RBSheet>
     </GestureHandlerRootView>
   );
-  // <GestureHandlerRootView style={{ flex: 1 }}>
-  //   <App imageUri={photo} />
-  // </GestureHandlerRootView>;
+  
 };
 
 const styles = StyleSheet.create({
@@ -175,6 +175,10 @@ const styles = StyleSheet.create({
     height: 20,
     backgroundColor: "#0076ff",
     borderRadius: 10,
+  },
+  sheet: {
+    borderTopLeftRadius: 14,
+    borderTopRightRadius: 14,
   },
 });
 
