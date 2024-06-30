@@ -12,6 +12,7 @@ import {
 import FeatherIcon from "react-native-vector-icons/Feather";
 import RBSheet from "react-native-raw-bottom-sheet";
 import Login from "../components/form/Login";
+import ScreenWrapper from "../components/shared/ScreenWrapper";
 
 export default function Account() {
   const [form, setForm] = useState({
@@ -30,6 +31,7 @@ export default function Account() {
   };
 
   return (
+    <ScreenWrapper>
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
       <View style={styles.container}>
         <View style={styles.profile}>
@@ -222,6 +224,7 @@ export default function Account() {
         <Login />
       </RBSheet>
     </SafeAreaView>
+    </ScreenWrapper>
   );
 }
 

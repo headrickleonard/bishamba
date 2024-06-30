@@ -12,6 +12,7 @@ import Shop from "../screens/Shop";
 import ProductDetails from "../screens/ProductDetails";
 import HomeScreen from "../screens/HomeScreen";
 import Details from './../screens/Details';
+import Notification from './../screens/Notification';
 
 function RootStack() {
   const Stack = createStackNavigator();
@@ -42,6 +43,16 @@ function RootStack() {
         // component={Index}
         // component={Home}
       component={HomeScreen}
+      />
+      <Stack.Screen
+        options={{
+          headerShown: false,
+          gestureEnabled: true,
+        }}
+        name="Notifications"
+        // component={Index}
+        // component={Home}
+      component={Notification}
       />
       <Stack.Screen
         options={{

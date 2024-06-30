@@ -9,11 +9,13 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import COLORS from "../const/colors";
+import ScreenWrapper from "../components/shared/ScreenWrapper";
 
 const Details = ({ navigation, route }) => {
   const plant = route.params;
 
   return (
+    <ScreenWrapper>
     <SafeAreaView
       style={{
         flex: 1,
@@ -126,6 +128,7 @@ const Details = ({ navigation, route }) => {
         </View>
       </View>
     </SafeAreaView>
+    </ScreenWrapper>
   );
 };
 

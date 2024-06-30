@@ -15,6 +15,7 @@ import { toolCategories } from "../utils";
 import { AnimatedScrollView } from "@kanelloc/react-native-animated-header-scroll-view";
 const dp = require("../assets/icons/cabbage.png");
 import { useNavigation } from "@react-navigation/native";
+import ScreenWrapper from "../components/shared/ScreenWrapper";
 
 const ShopProfile = ({ shopAvatar, shopName }) => {
   const navigation = useNavigation();
@@ -223,6 +224,7 @@ const Ecommerce = () => {
   };
 
   return (
+    <ScreenWrapper>
     <AnimatedScrollView
       HeaderNavbarComponent={<HeaderComponent />}
       // TopNavBarComponent={<TopNavBar />}
@@ -279,6 +281,7 @@ const Ecommerce = () => {
         </View>
       </ScrollView>
     </AnimatedScrollView>
+    </ScreenWrapper>
   );
 };
 

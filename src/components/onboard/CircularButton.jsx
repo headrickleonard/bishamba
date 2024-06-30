@@ -42,7 +42,7 @@ const CircularButton = ({ screensLenght, onPress, index }) => {
           cx={centerX}
           cy={centerY}
           r={radius}
-          stroke="lightblue"
+          stroke="#32c759"
           strokeWidth="2"
         />
         <AnimatedCircle
@@ -50,7 +50,7 @@ const CircularButton = ({ screensLenght, onPress, index }) => {
           cx={centerX}
           cy={centerY}
           r={radius}
-          stroke="#4fafb0"
+          stroke="#32c759"
           strokeWidth="4"
           strokeLinecap={"round"}
           strokeDasharray={`${radius * Math.PI * 2}`}
@@ -66,6 +66,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     position: "relative",
+    backgroundColor:"transparent"
   },
   iconButtonStyle: {
     position: "absolute",

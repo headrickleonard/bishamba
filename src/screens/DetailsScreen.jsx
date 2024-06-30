@@ -23,6 +23,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import Feedback from "../components/form/Feedback";
+import ScreenWrapper from "../components/shared/ScreenWrapper";
 
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 const { width, height } = Dimensions.get("window");

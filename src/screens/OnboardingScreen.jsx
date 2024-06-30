@@ -12,6 +12,7 @@ import OnboardingItem from "../components/onboard/OnboardingItem";
 import { screens } from "../utils/screen";
 import { SCREEN_WIDTH } from "../utils/screen";
 import Paginator from "../components/onboard/Paginator";
+import ScreenWrapper from "../components/shared/ScreenWrapper";
 
 const MAX_LENGTH = screens.length;
 
@@ -34,28 +35,30 @@ const OnboardingScreen = () => {
     }
   };
   return (
-    <SafeAreaView style={styles.safeAreaView}>
-      <Animated.ScrollView
-        onScroll={scrollHandler}
-        ref={aref}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        scrollEventThrottle={16}
-        pagingEnabled
-      >
-        {screens.map((screen, index) => (
-          <OnboardingItem screen={screen} key={index.toString()} />
-        ))}
-      </Animated.ScrollView>
-      <View>
-        <Paginator itemsLength={screens.length} scrollX={scrollX} />
-        <CircularButton
-          screensLenght={screens.length}
-          onPress={onPressButton}
-          index={index}
-        />
-      </View>
-    </SafeAreaView>
+    <ScreenWrapper>
+      <SafeAreaView style={styles.safeAreaView}>
+        <Animated.ScrollView
+          onScroll={scrollHandler}
+          ref={aref}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          scrollEventThrottle={16}
+          pagingEnabled
+        >
+          {screens.map((screen, index) => (
+            <OnboardingItem screen={screen} key={index.toString()} />
+          ))}
+        </Animated.ScrollView>
+        <View>
+          <Paginator itemsLength={screens.length} scrollX={scrollX} />
+          <CircularButton
+            screensLenght={screens.length}
+            onPress={onPressButton}
+            index={index}
+          />
+        </View>
+      </SafeAreaView>
+    </ScreenWrapper>
   );
 };
 

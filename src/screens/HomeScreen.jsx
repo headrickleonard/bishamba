@@ -7,11 +7,13 @@ import {
   FlatList,
   Image,
   Dimensions,
+  Pressable
 } from "react-native";
 import { TextInput, TouchableOpacity } from "react-native-gesture-handler";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import COLORS from "../const/colors";
 import plants from "../const/plants";
+import ScreenWrapper from "../components/shared/ScreenWrapper";
 const width = Dimensions.get("window").width / 2 - 30;
 
 const HomeScreen = ({ navigation }) => {
@@ -121,44 +123,52 @@ const HomeScreen = ({ navigation }) => {
     );
   };
   return (
-    <SafeAreaView
-      style={{ flex: 1, paddingHorizontal: 20, backgroundColor: COLORS.white }}
-    >
-      <View style={style.header}>
-        <View>
-          {/* <Text style={{fontSize: 25, fontWeight: 'bold'}}>Welcome to</Text> */}
-          <Text
-            style={{ fontSize: 36, color: COLORS.green, fontWeight: "bold" }}
-          >
-            Bishamba
-          </Text>
-        </View>
-        <Icon name="notifications" size={28} color={"gray"} />
-      </View>
-      <View style={{ marginTop: 30, flexDirection: "row" }}>
-        <View style={style.searchContainer}>
-          <Icon name="search" size={25} style={{ marginLeft: 20 }} />
-          <TextInput placeholder="Search" style={style.input} />
-        </View>
-        <View style={style.sortBtn}>
-          <Icon name="sort" size={30} color={COLORS.white} />
-        </View>
-      </View>
-      <CategoryList />
-      <FlatList
-        columnWrapperStyle={{ justifyContent: "space-between" }}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{
-          marginTop: 10,
-          paddingBottom: 50,
+    <ScreenWrapper>
+      <SafeAreaView
+        style={{
+          flex: 1,
+          paddingHorizontal: 20,
+          backgroundColor: COLORS.white,
         }}
-        numColumns={2}
-        data={plants}
-        renderItem={({ item }) => {
-          return <Card plant={item} />;
-        }}
-      />
-    </SafeAreaView>
+      >
+        <View style={style.header}>
+          <View>
+            {/* <Text style={{fontSize: 25, fontWeight: 'bold'}}>Welcome to</Text> */}
+            <Text
+              style={{ fontSize: 36, color: COLORS.green, fontWeight: "bold" }}
+            >
+              Bishamba
+            </Text>
+          </View>
+          <Pressable onPress={() => navigation.navigate("Notifications")}>
+            <Icon name="notifications" size={28} color={"gray"} />
+          </Pressable>
+        </View>
+        <View style={{ marginTop: 30, flexDirection: "row" }}>
+          <View style={style.searchContainer}>
+            <Icon name="search" size={25} style={{ marginLeft: 20 }} />
+            <TextInput placeholder="Search" style={style.input} />
+          </View>
+          <View style={style.sortBtn}>
+            <Icon name="sort" size={30} color={COLORS.white} />
+          </View>
+        </View>
+        <CategoryList />
+        <FlatList
+          columnWrapperStyle={{ justifyContent: "space-between" }}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{
+            marginTop: 10,
+            paddingBottom: 50,
+          }}
+          numColumns={2}
+          data={plants}
+          renderItem={({ item }) => {
+            return <Card plant={item} />;
+          }}
+        />
+      </SafeAreaView>
+    </ScreenWrapper>
   );
 };
 

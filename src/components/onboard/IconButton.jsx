@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
     opacity: 0.9,
   },
   containedButton: {
-    backgroundColor: "#2196F3",
+    backgroundColor: "#32c759",
   },
   textButton: {
     backgroundColor: "transparent",
