@@ -140,7 +140,7 @@ const HomeScreen = ({ navigation }) => {
               Bishamba
             </Text>
           </View>
-          <Pressable onPress={() => navigation.navigate("Notifications")}>
+          <Pressable onPress={() => navigation.navigate("Results")}>
             <Icon name="notifications" size={28} color={"gray"} />
           </Pressable>
         </View>

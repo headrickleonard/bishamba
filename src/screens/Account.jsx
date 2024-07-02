@@ -21,6 +21,7 @@ export default function Account() {
     pushNotifications: false,
   });
   const sheet = React.useRef();
+  const [isPressed, setIsPressed] = useState(false);
 
   React.useEffect(() => {
     sheet.current.open();
@@ -32,67 +33,67 @@ export default function Account() {
 
   return (
     <ScreenWrapper>
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
-      <View style={styles.container}>
-        <View style={styles.profile}>
-          <TouchableOpacity
-            onPress={() => {
-              // handle onPress
-            }}
-          >
-            <View style={styles.profileAvatarWrapper}>
-              <Image
-                alt=""
-                source={{
-                  uri: "https://images.unsplash.com/photo-1633332755192-727a05c4013d?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=facearea&facepad=2.5&w=256&h=256&q=80",
-                }}
-                style={styles.profileAvatar}
-              />
-
-              <TouchableOpacity
-                onPress={() => {
-                  // handle onPress
-                  openLoginSheet();
-                }}
-              >
-                <View style={styles.profileAction}>
-                  <FeatherIcon color="#fff" name="edit-3" size={15} />
-                </View>
-              </TouchableOpacity>
-            </View>
-          </TouchableOpacity>
-
-          <View>
-            <Text style={styles.profileName}>John Doe</Text>
-
-            <Text style={styles.profileAddress}>
-              123 Nsalaga Street. Anytown, MBY 17101
-            </Text>
-          </View>
-        </View>
-
-        <ScrollView className="">
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Preferences</Text>
-
-            <TouchableOpacity
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+        <View style={styles.container}>
+          <View style={styles.profile}>
+            <TouchableOpacity activeOpacity={0.7} 
               onPress={() => {
                 // handle onPress
               }}
-              style={styles.row}
             >
-              <View style={[styles.rowIcon, { backgroundColor: "#fe9400" }]}>
-                <FeatherIcon color="#fff" name="globe" size={20} />
+              <View style={styles.profileAvatarWrapper}>
+                <Image
+                  alt=""
+                  source={{
+                    uri: "https://images.unsplash.com/photo-1633332755192-727a05c4013d?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=facearea&facepad=2.5&w=256&h=256&q=80",
+                  }}
+                  style={styles.profileAvatar}
+                />
+
+                <TouchableOpacity activeOpacity={0.7} 
+                  onPress={() => {
+                    // handle onPress
+                    openLoginSheet();
+                  }}
+                >
+                  <View style={styles.profileAction}>
+                    <FeatherIcon color="#fff" name="edit-3" size={15} />
+                  </View>
+                </TouchableOpacity>
               </View>
-
-              <Text style={styles.rowLabel}>Language</Text>
-
-              <View style={styles.rowSpacer} />
-
-              <FeatherIcon color="#C6C6C6" name="chevron-right" size={20} />
             </TouchableOpacity>
 
-            {/* <View style={styles.row}>
+            <View>
+              <Text style={styles.profileName}>John Doe</Text>
+
+              <Text style={styles.profileAddress}>
+                123 Nsalaga Street. Anytown, MBY 17101
+              </Text>
+            </View>
+          </View>
+
+          <ScrollView className="">
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Preferences</Text>
+
+              <TouchableOpacity activeOpacity={0.7} 
+                onPress={() => {
+                  // handle onPress
+                }}
+                style={styles.row}
+              >
+                <View style={[styles.rowIcon, { backgroundColor: "#fe9400" }]}>
+                  <FeatherIcon color="#fff" name="globe" size={20} />
+                </View>
+
+                <Text style={styles.rowLabel}>Language</Text>
+
+                <View style={styles.rowSpacer} />
+
+                <FeatherIcon color="#C6C6C6" name="chevron-right" size={20} />
+              </TouchableOpacity>
+
+              {/* <View style={styles.row}>
               <View style={[styles.rowIcon, { backgroundColor: '#007afe' }]}>
                 <FeatherIcon color="#fff" name="moon" size={20} />
               </View>
@@ -106,124 +107,145 @@ export default function Account() {
                 value={form.darkMode} />
             </View> */}
 
-            <TouchableOpacity
-              onPress={() => {
-                // handle onPress
-              }}
-              style={styles.row}
-            >
-              <View style={[styles.rowIcon, { backgroundColor: "#32c759" }]}>
-                <FeatherIcon color="#fff" name="navigation" size={20} />
+              <TouchableOpacity activeOpacity={0.7} 
+                onPress={() => {
+                  // handle onPress
+                }}
+                style={styles.row}
+              >
+                <View style={[styles.rowIcon, { backgroundColor: "#32c759" }]}>
+                  <FeatherIcon color="#fff" name="navigation" size={20} />
+                </View>
+
+                <Text style={styles.rowLabel}>Location</Text>
+
+                <View style={styles.rowSpacer} />
+
+                <FeatherIcon color="#C6C6C6" name="chevron-right" size={20} />
+              </TouchableOpacity>
+
+              <View style={styles.row}>
+                <View style={[styles.rowIcon, { backgroundColor: "#38C959" }]}>
+                  <FeatherIcon color="#fff" name="at-sign" size={20} />
+                </View>
+
+                <Text style={styles.rowLabel}>Email Notifications</Text>
+
+                <View style={styles.rowSpacer} />
+
+                <Switch
+                  onValueChange={(emailNotifications) =>
+                    setForm({ ...form, emailNotifications })
+                  }
+                  value={form.emailNotifications}
+                />
               </View>
 
-              <Text style={styles.rowLabel}>Location</Text>
+              <View style={styles.row}>
+                <View style={[styles.rowIcon, { backgroundColor: "#38C959" }]}>
+                  <FeatherIcon color="#fff" name="bell" size={20} />
+                </View>
 
-              <View style={styles.rowSpacer} />
+                <Text style={styles.rowLabel}>Push Notifications</Text>
 
-              <FeatherIcon color="#C6C6C6" name="chevron-right" size={20} />
-            </TouchableOpacity>
+                <View style={styles.rowSpacer} />
 
-            <View style={styles.row}>
-              <View style={[styles.rowIcon, { backgroundColor: "#38C959" }]}>
-                <FeatherIcon color="#fff" name="at-sign" size={20} />
+                <Switch
+                  onValueChange={(pushNotifications) =>
+                    setForm({ ...form, pushNotifications })
+                  }
+                  value={form.pushNotifications}
+                />
               </View>
-
-              <Text style={styles.rowLabel}>Email Notifications</Text>
-
-              <View style={styles.rowSpacer} />
-
-              <Switch
-                onValueChange={(emailNotifications) =>
-                  setForm({ ...form, emailNotifications })
-                }
-                value={form.emailNotifications}
-              />
             </View>
 
-            <View style={styles.row}>
-              <View style={[styles.rowIcon, { backgroundColor: "#38C959" }]}>
-                <FeatherIcon color="#fff" name="bell" size={20} />
-              </View>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Resources</Text>
 
-              <Text style={styles.rowLabel}>Push Notifications</Text>
+              <TouchableOpacity activeOpacity={0.7} 
+                onPress={() => {
+                  // handle onPress
+                }}
+                style={styles.row}
+              >
+                <View style={[styles.rowIcon, { backgroundColor: "#8e8d91" }]}>
+                  <FeatherIcon color="#fff" name="flag" size={20} />
+                </View>
 
-              <View style={styles.rowSpacer} />
+                <Text style={styles.rowLabel}>Report Bug</Text>
 
-              <Switch
-                onValueChange={(pushNotifications) =>
-                  setForm({ ...form, pushNotifications })
-                }
-                value={form.pushNotifications}
-              />
+                <View style={styles.rowSpacer} />
+
+                <FeatherIcon color="#C6C6C6" name="chevron-right" size={20} />
+              </TouchableOpacity>
+
+              <TouchableOpacity activeOpacity={0.7} 
+                onPress={() => {
+                  // handle onPress
+                }}
+                style={styles.row}
+              >
+                <View style={[styles.rowIcon, { backgroundColor: "#007afe" }]}>
+                  <FeatherIcon color="#fff" name="mail" size={20} />
+                </View>
+
+                <Text style={styles.rowLabel}>Contact Us</Text>
+
+                <View style={styles.rowSpacer} />
+
+                <FeatherIcon color="#C6C6C6" name="chevron-right" size={20} />
+              </TouchableOpacity>
+
+              <TouchableOpacity activeOpacity={0.7} 
+                onPress={() => {
+                  // handle onPress
+                }}
+                style={styles.row}
+              >
+                <View style={[styles.rowIcon, { backgroundColor: "#32c759" }]}>
+                  <FeatherIcon color="#fff" name="star" size={20} />
+                </View>
+
+                <Text style={styles.rowLabel}>Rate in App Store</Text>
+
+                <View style={styles.rowSpacer} />
+
+                <FeatherIcon color="#C6C6C6" name="chevron-right" size={20} />
+              </TouchableOpacity>
             </View>
-          </View>
-
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Resources</Text>
-
-            <TouchableOpacity
-              onPress={() => {
-                // handle onPress
-              }}
-              style={styles.row}
-            >
-              <View style={[styles.rowIcon, { backgroundColor: "#8e8d91" }]}>
-                <FeatherIcon color="#fff" name="flag" size={20} />
-              </View>
-
-              <Text style={styles.rowLabel}>Report Bug</Text>
-
-              <View style={styles.rowSpacer} />
-
-              <FeatherIcon color="#C6C6C6" name="chevron-right" size={20} />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => {
-                // handle onPress
-              }}
-              style={styles.row}
-            >
-              <View style={[styles.rowIcon, { backgroundColor: "#007afe" }]}>
-                <FeatherIcon color="#fff" name="mail" size={20} />
-              </View>
-
-              <Text style={styles.rowLabel}>Contact Us</Text>
-
-              <View style={styles.rowSpacer} />
-
-              <FeatherIcon color="#C6C6C6" name="chevron-right" size={20} />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => {
-                // handle onPress
-              }}
-              style={styles.row}
-            >
-              <View style={[styles.rowIcon, { backgroundColor: "#32c759" }]}>
-                <FeatherIcon color="#fff" name="star" size={20} />
-              </View>
-
-              <Text style={styles.rowLabel}>Rate in App Store</Text>
-
-              <View style={styles.rowSpacer} />
-
-              <FeatherIcon color="#C6C6C6" name="chevron-right" size={20} />
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </View>
-      <RBSheet
-        customStyles={{ container: styles.sheet }}
-        height={500}
-        // openDuration={250}
-        ref={sheet}
-        keyboardAvoidingViewEnabled
-      >
-        <Login />
-      </RBSheet>
-    </SafeAreaView>
+          </ScrollView>
+        </View>
+        <RBSheet
+          // customStyles={{ container: styles.sheet }}
+          height={500}
+          // openDuration={250}
+          ref={sheet}
+          keyboardAvoidingViewEnabled
+          // useNativeDriver={true}
+          customStyles={{
+            wrapper: {
+              backgroundColor: "transparent",
+              
+            },
+            draggableIcon: {
+              backgroundColor: "#000",
+            },
+            container:{
+              backgroundColor:"black"
+            }
+          }}
+          customModalProps={{
+            animationType: "slide",
+            statusBarTranslucent: true,
+          }}
+          customAvoidingViewProps={{
+            enabled: false,
+          }}
+          draggable
+        >
+          <Login />
+        </RBSheet>
+      </SafeAreaView>
     </ScreenWrapper>
   );
 }

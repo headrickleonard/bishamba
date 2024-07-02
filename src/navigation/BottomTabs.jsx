@@ -1,8 +1,6 @@
-// navigation/BottomTabs.js
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
-// Import your screens
 import HomeScreen from "../screens/HomeScreen";
 import DiagnoseScreen from "../screens/DetailsScreen";
 import ScanScreen from "../screens/Camera";
@@ -13,6 +11,11 @@ import CustomTabBar from "./CustomTabBar";
 import RootStack from "./index";
 import { BlurView } from "expo-blur";
 import OnboardingScreen from "../screens/OnboardingScreen";
+import SocialFeedScreen from "../screens/SocialFeedScreen";
+import NoInternetScreen from "../screens/NoInternetScreen";
+import TabView from "../components/social/TabView";
+import ResultsScreen from "../screens/ResultScreen";
+
 const Tab = createBottomTabNavigator();
 
 const BottomTabs = () => {
@@ -65,10 +68,12 @@ const BottomTabs = () => {
               );
               break;
             case "Shops":
-              iconName = focused ? "comment-quote-outline" : "comment-quote-outline";
+              iconName = focused
+                ? "comment-quote-outline"
+                : "comment-quote-outline";
               break;
             case "Account":
-              iconName = focused ? "account" : "account-outline";
+              iconName = focused ? "cog-outline" : "account-outline";
               break;
           }
 
@@ -108,7 +113,7 @@ const BottomTabs = () => {
           />
         ),
       })}
-      backBehavior="history"
+      // backBehavior="history"
     >
       <Tab.Screen
         name="Home"
@@ -140,7 +145,9 @@ const BottomTabs = () => {
       />
       <Tab.Screen
         name="Shops"
-        component={ShopsScreen}
+        // component={TabView}
+        // component={SocialFeedScreen}
+        component={ResultsScreen}
         options={{
           headerShown: false,
           gestureEnabled: true,

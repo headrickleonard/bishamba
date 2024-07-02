@@ -50,7 +50,7 @@ export const chemicalsData = [
   {
     id: 1,
     description:
-      "EduFund is democratizing access to quality education for underserved young talents, with the aim of catalyzing Africa’s economy by enabling Africa’s young",
+      " economy",
     icon: icon1,
     price: "12,000/=Tsh",
     name: "product1 name",

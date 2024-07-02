@@ -13,7 +13,8 @@ import ProductDetails from "../screens/ProductDetails";
 import HomeScreen from "../screens/HomeScreen";
 import Details from './../screens/Details';
 import Notification from './../screens/Notification';
-
+import ResultsScreen from './../screens/ResultScreen';
+import CreatePostScreen from "../screens/CreatePostScreen";
 function RootStack() {
   const Stack = createStackNavigator();
   return (
@@ -42,7 +43,7 @@ function RootStack() {
         name="Home"
         // component={Index}
         // component={Home}
-      component={HomeScreen}
+        component={HomeScreen}
       />
       <Stack.Screen
         options={{
@@ -52,7 +53,17 @@ function RootStack() {
         name="Notifications"
         // component={Index}
         // component={Home}
-      component={Notification}
+        component={Notification}
+      />
+      <Stack.Screen
+        options={{
+          headerShown: false,
+          gestureEnabled: true,
+        }}
+        name="CreatePost"
+        // component={Index}
+        // component={Home}
+        component={CreatePostScreen}
       />
       <Stack.Screen
         options={{
@@ -222,6 +233,8 @@ function RootStack() {
           },
         }}
       />
+      <Stack.Screen name="Results" component={ResultsScreen} options={{ title: 'Results', headerShown: false }} />
+
     </Stack.Navigator>
   );
 }
