@@ -88,6 +88,59 @@ export default function CameraScreen({ navigation }) {
     }
   }, [isFocused]);
 
+  // const openGallery = async () => {
+  //   try {
+  //     const media = await ImagePicker.launchImageLibraryAsync({
+  //       mediaTypes: ImagePicker.MediaTypeOptions.All,
+  //       allowsEditing: true,
+  //       quality: 1,
+  //     });
+
+  //     if (!media.canceled) {
+  //       setSelectedMedia(media.assets[0].uri);
+  //       navigation.navigate("ScanDetails", { photo: media.assets[0].uri });
+  //     }
+  //   } catch (error) {
+  //     console.error("Gallery Picker Error:", error);
+  //   }
+  // };
+
+  // const takePhoto = async () => {
+  //   if (cameraRef.current && isCameraReady) {
+  //     try {
+  //       const options = {
+  //         quality: 1, // Image quality (0 to 1)
+  //         base64: true, // Return base64-encoded image data
+  //         exif: true, // Include EXIF data (orientation, etc.)
+  //       };
+
+  //       const data = await cameraRef.current.takePictureAsync(options);
+  //       console.log(data.uri);
+  //       setImageUri(data.uri);
+  //       navigation.navigate("ScanDetails", { photo: data.uri });
+  //     } catch (error) {
+  //       console.error("Failed to take picture:", error);
+  //     }
+  //   }
+  // };
+  const takePhoto = async () => {
+    if (cameraRef.current && isCameraReady) {
+      try {
+        const options = {
+          quality: 1, // Image quality (0 to 1)
+          base64: true, // Return base-image-encoded image data
+          exif: true, // Include EXIF data (orientation, etc.)
+        };
+        const data = await cameraRef.current.takePictureAsync(options);
+        console.log(data.uri);
+        setImageUri(data.uri);
+        navigation.navigate("PlantScanner", { photoUri: data.uri }); // Navigate with image URI
+      } catch (error) {
+        console.error("Failed to take picture:", error);
+      }
+    }
+  };
+  
   const openGallery = async () => {
     try {
       const media = await ImagePicker.launchImageLibraryAsync({
@@ -95,34 +148,16 @@ export default function CameraScreen({ navigation }) {
         allowsEditing: true,
         quality: 1,
       });
-
       if (!media.canceled) {
         setSelectedMedia(media.assets[0].uri);
-        navigation.navigate("ScanDetails", { photo: media.assets[0].uri });
+        navigation.navigate("PlantScanner", { photoUri: media.assets[0].uri }); // Navigate with image URI
       }
     } catch (error) {
       console.error("Gallery Picker Error:", error);
     }
   };
+  
 
-  const takePhoto = async () => {
-    if (cameraRef.current && isCameraReady) {
-      try {
-        const options = {
-          quality: 1, // Image quality (0 to 1)
-          base64: true, // Return base64-encoded image data
-          exif: true, // Include EXIF data (orientation, etc.)
-        };
-
-        const data = await cameraRef.current.takePictureAsync(options);
-        console.log(data.uri);
-        setImageUri(data.uri);
-        navigation.navigate("ScanDetails", { photo: data.uri });
-      } catch (error) {
-        console.error("Failed to take picture:", error);
-      }
-    }
-  };
 
   const handlePinchGesture = (event) => {
     if (event.nativeEvent.state === State.ACTIVE) {

@@ -15,6 +15,8 @@ import Details from './../screens/Details';
 import Notification from './../screens/Notification';
 import ResultsScreen from './../screens/ResultScreen';
 import CreatePostScreen from "../screens/CreatePostScreen";
+import PlantScanner from "../screens/PlantScanner";
+
 function RootStack() {
   const Stack = createStackNavigator();
   return (
@@ -64,6 +66,16 @@ function RootStack() {
         // component={Index}
         // component={Home}
         component={CreatePostScreen}
+      />
+      <Stack.Screen
+        options={{
+          headerShown: false,
+          gestureEnabled: true,
+        }}
+        name="PlantScanner"
+        // component={Index}
+        // component={Home}
+        component={PlantScanner}
       />
       <Stack.Screen
         options={{

@@ -15,6 +15,8 @@ import SocialFeedScreen from "../screens/SocialFeedScreen";
 import NoInternetScreen from "../screens/NoInternetScreen";
 import TabView from "../components/social/TabView";
 import ResultsScreen from "../screens/ResultScreen";
+import ScanHistory from "../screens/ScanHistory";
+import PlantScanner from "../screens/PlantScanner";
 
 const Tab = createBottomTabNavigator();
 
@@ -147,7 +149,9 @@ const BottomTabs = () => {
         name="Shops"
         // component={TabView}
         // component={SocialFeedScreen}
-        component={ResultsScreen}
+        // component={ScanHistory}
+        // component={ResultsScreen}
+        component={PlantScanner}
         options={{
           headerShown: false,
           gestureEnabled: true,
