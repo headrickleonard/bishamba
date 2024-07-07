@@ -10,7 +10,7 @@ const WarningAlert = () => {
           <CircleAlert color={"white"} />
         </Pressable>
         <View className="flex flex-col items-center justify-start w-[60%]">
-          <Text className="font-semibold text-lg self-start ">Important!</Text>
+          {/* <Text className="font-semibold text-lg self-start ">Important!</Text> */}
           <Text className="">
             Please use the recommended plant medicine with caution.
           </Text>

@@ -6,128 +6,136 @@ import {
   Text,
   StyleSheet,
   Pressable,
+  TouchableOpacity,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import COLORS from "../const/colors";
 import ScreenWrapper from "../components/shared/ScreenWrapper";
+import { PRIMARY_COLOR } from "../styles/styles";
 
 const Details = ({ navigation, route }) => {
   const plant = route.params;
+  const [value, setValue] = React.useState(1);
 
   return (
     <ScreenWrapper>
-    <SafeAreaView
-      style={{
-        flex: 1,
-        backgroundColor: COLORS.white,
-      }}
-    >
-      <View style={style.header}>
-        <Pressable className="bg-neutral-400/20 rounded-full p-2">
-          <Icon
-            name="arrow-back"
-            size={24}
-            onPress={() => navigation.goBack()}
+      <SafeAreaView
+        style={{
+          flex: 1,
+          backgroundColor: COLORS.white,
+        }}
+      >
+        <View style={style.header}>
+          <Pressable className="bg-neutral-400/20 rounded-full p-2">
+            <Icon
+              name="arrow-back"
+              size={24}
+              onPress={() => navigation.goBack()}
+            />
+          </Pressable>
+          <Pressable className="bg-neutral-400/10 rounded-full p-2">
+            <Icon name="shopping-cart" size={24} />
+          </Pressable>
+        </View>
+        <View style={style.imageContainer}>
+          <Image
+            source={plant.img}
+            style={{ resizeMode: "contain", flex: 1 }}
           />
-        </Pressable>
-        <Pressable className="bg-neutral-400/10 rounded-full p-2">
-          <Icon name="shopping-cart" size={24} />
-        </Pressable>
-      </View>
-      <View style={style.imageContainer}>
-        <Image source={plant.img} style={{ resizeMode: "contain", flex: 1 }} />
-      </View>
-      <View style={style.detailsContainer}>
-        <View
-          style={{
-            marginLeft: 20,
-            flexDirection: "row",
-            alignItems: "flex-end",
-          }}
-        >
-          <View style={style.line} />
-          <Text style={{ fontSize: 18, fontWeight: "bold" }}>Best choice</Text>
         </View>
-        <View
-          style={{
-            marginLeft: 20,
-            marginTop: 20,
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <Text style={{ fontSize: 22, fontWeight: "bold" }}>{plant.name}</Text>
-          <View style={style.priceTag}>
-            <Text
-              style={{
-                marginLeft: 15,
-                color: COLORS.white,
-                fontWeight: "bold",
-                fontSize: 16,
-              }}
-            >
-              ${plant.price}
-            </Text>
-          </View>
-        </View>
-        <View style={{ paddingHorizontal: 20, marginTop: 10 }}>
-          <Text style={{ fontSize: 20, fontWeight: "bold" }}>About</Text>
-          <Text
-            style={{
-              color: "grey",
-              fontSize: 16,
-              lineHeight: 22,
-              marginTop: 10,
-            }}
-          >
-            {plant.about}
-          </Text>
+        <View style={style.detailsContainer}>
           <View
             style={{
+              marginLeft: 20,
+              flexDirection: "row",
+              alignItems: "flex-end",
+            }}
+          >
+            <View style={style.line} />
+            <Text style={{ fontSize: 18, fontWeight: "bold" }}>
+              Best choice
+            </Text>
+          </View>
+          <View
+            style={{
+              marginLeft: 20,
               marginTop: 20,
               flexDirection: "row",
               justifyContent: "space-between",
+              alignItems: "center",
             }}
           >
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-              }}
-            >
-              <View style={style.borderBtn}>
-                <Text style={style.borderBtnText}>-</Text>
-              </View>
+            <Text style={{ fontSize: 22, fontWeight: "bold" }}>
+              {plant.name}
+            </Text>
+            <View style={style.priceTag}>
               <Text
                 style={{
-                  fontSize: 20,
-                  marginHorizontal: 10,
-                  fontWeight: "bold",
-                }}
-              >
-                1
-              </Text>
-              <View style={style.borderBtn}>
-                <Text style={style.borderBtnText}>+</Text>
-              </View>
-            </View>
-
-            <View style={style.buyBtn}>
-              <Text
-                style={{
+                  marginLeft: 15,
                   color: COLORS.white,
-                  fontSize: 18,
                   fontWeight: "bold",
+                  fontSize: 16,
                 }}
               >
-                Buy
+                ${plant.price}
               </Text>
             </View>
           </View>
+          <View style={{ paddingHorizontal: 20, marginTop: 10 }}>
+            <Text style={{ fontSize: 20, fontWeight: "bold" }}>About</Text>
+            <Text
+              style={{
+                color: "grey",
+                fontSize: 16,
+                lineHeight: 22,
+                marginTop: 10,
+              }}
+            >
+              {plant.about}
+            </Text>
+            <View
+              style={{
+                marginTop: 20,
+                flexDirection: "row",
+                justifyContent: "space-between",
+              }}
+            >
+           
+              <View style={style.counter}>
+                <TouchableOpacity
+                  disabled={value <= 1}
+                  onPress={() => {
+                    setValue(Math.max(value - 1, 0));
+                  }}
+                  style={style.counterAction}
+                >
+                  <Text style={style.counterActionText}>-</Text>
+                </TouchableOpacity>
+                <Text style={style.counterValue}>{value}</Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    setValue(value + 1);
+                  }}
+                  style={style.counterAction}
+                >
+                  <Text style={style.counterActionText}>+</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={style.buyBtn}>
+                <Text
+                  style={{
+                    color: COLORS.white,
+                    fontSize: 18,
+                    fontWeight: "bold",
+                  }}
+                >
+                  Buy
+                </Text>
+              </View>
+            </View>
+          </View>
         </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
     </ScreenWrapper>
   );
 };
@@ -187,6 +195,38 @@ const style = StyleSheet.create({
     justifyContent: "center",
     borderTopLeftRadius: 25,
     borderBottomLeftRadius: 25,
+  },
+  counter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "center",
+    borderWidth: 1,
+    borderColor: PRIMARY_COLOR,
+    borderStyle: "solid",
+    borderRadius: 8,
+    height: 36,
+  },
+  counterAction: {
+    width: 46,
+    height: 34,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  counterActionText: {
+    fontSize: 20,
+    lineHeight: 20,
+    fontWeight: "500",
+    color: "#000",
+  },
+  counterValue: {
+    minWidth: 34,
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#101010",
+    textAlign: "center",
+    paddingHorizontal: 8,
   },
 });
 

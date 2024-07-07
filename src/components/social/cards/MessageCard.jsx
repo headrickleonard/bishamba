@@ -1,5 +1,6 @@
 import React from "react";
-import { View, Text, Image, StyleSheet } from "react-native";
+import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
+import { useNavigation } from '@react-navigation/native';
 
 // MessageCard Component
 const MessageCard = ({
@@ -9,9 +10,12 @@ const MessageCard = ({
   lastMessage,
   timestamp,
   unreadMessages,
+  onCardPress,
 }) => {
+  const navigation = useNavigation();
+
   return (
-    <View style={styles.card}>
+    <TouchableOpacity activeOpacity={0.95} style={styles.card} onPress={() => navigation.navigate('Chat')}>
       <View style={styles.profileContainer}>
         <Image source={{ uri: profilePicture }} style={styles.profilePicture} />
         {isOnline && <View style={styles.onlineIndicator} />}
@@ -28,7 +32,7 @@ const MessageCard = ({
           </View>
         )}
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 

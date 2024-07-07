@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -13,9 +13,14 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
+  runOnJS,
 } from "react-native-reanimated";
+import LottieView from "lottie-react-native";
+import WarningAlert from "../components/result/WarningAlert";
+import RBSheet from "react-native-raw-bottom-sheet";
+import PlantsList from "../components/form/PlantsList";
 
-const PlantScanner = ({ route }) => {
+const PlantScanner = ({ route, navigation }) => {
   const [isScanning, setIsScanning] = useState(false);
   const { photoUri } = route.params;
   const [status, setStatus] = useState("");
@@ -23,6 +28,9 @@ const PlantScanner = ({ route }) => {
   const analyzingOpacity = useSharedValue(0);
   const detectingOpacity = useSharedValue(0);
   const identifyingOpacity = useSharedValue(0);
+  const fadeOutOpacity = useSharedValue(1);
+  const [selectedPlant, setSelectedPlant] = useState(null);
+  const refRBSheet = useRef();
 
   const analyzingStyle = useAnimatedStyle(() => ({
     opacity: withTiming(analyzingOpacity.value, { duration: 500 }),
@@ -44,7 +52,9 @@ const PlantScanner = ({ route }) => {
       setHasPermission(status === "granted");
     })();
   }, []);
-
+  // useEffect(() => {
+  //   refRBSheet.current.open();
+  // }, []);
   //   const handleScan = async () => {
   //     setIsScanning(true);
   //     setStatus("Analyzing image...");
@@ -87,15 +97,28 @@ const PlantScanner = ({ route }) => {
         setTimeout(() => {
           setStatus("Plant identified!");
           setIsScanning(false);
-          // Reset steps to initial state after the analysis is complete
-          setSteps({ analyzing: false, detecting: false, identifying: false });
-          analyzingOpacity.value = 0;
-          detectingOpacity.value = 0;
-          identifyingOpacity.value = 0;
+          // Fade out the steps in reverse order
+          identifyingOpacity.value = withTiming(0, { duration: 500 }, () => {
+            detectingOpacity.value = withTiming(0, { duration: 500 }, () => {
+              analyzingOpacity.value = withTiming(0, { duration: 500 }, () => {
+                runOnJS(navigation.navigate)("Results", {
+                  plantName: "Janda Bolong",
+                  plantDetails: "Detailed information about Janda Bolong.",
+                  photoUri,
+                });
+              });
+            });
+          });
         }, 2000);
       }, 2000);
     }, 2000);
   };
+
+  const handleSelectPlant = (plant) => {
+    setSelectedPlant(plant);
+    refRBSheet.current.close();
+  };
+
   if (hasPermission === null) {
     return <View />;
   }
@@ -107,19 +130,32 @@ const PlantScanner = ({ route }) => {
     <View style={styles.container}>
       {photoUri && (
         <View style={styles.headerContainer}>
-          <View style={styles.header}>
-            <TouchableOpacity style={styles.headerIcon}>
+          {/* <View style={styles.header}>
+            <TouchableOpacity style={styles.headerIcon} activeOpacity={0.8}>
               <Ionicons name="close" size={24} color={"white"} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.headerIcon}>
+            <TouchableOpacity style={styles.headerIcon} activeOpacity={0.8}>
               <Ionicons name="information" size={24} color={"white"} />
             </TouchableOpacity>
+          </View> */}
+          {/* <Text style={styles.statusMessage} className="font-bold">
+            Janda Bolong
+          </Text> */}
+          <View style={styles.imageContainer}>
+            <Image source={{ uri: photoUri }} style={styles.scannedImage} />
+            {isScanning && (
+              <LottieView
+                source={require("../assets/anime/scan.json")}
+                autoPlay
+                loop
+                style={styles.lottieOverlay}
+              />
+            )}
           </View>
-          <Text style={styles.statusMessage}>Janda Bolong</Text>
-          <Image source={{ uri: photoUri }} style={styles.scannedImage} />
           <TouchableOpacity
             style={styles.scanButton}
             activeOpacity={0.9}
+            // onPress={()=>{refRBSheet.current.open()}}
             onPress={handleScan}
             disabled={isScanning}
           >
@@ -135,47 +171,62 @@ const PlantScanner = ({ route }) => {
         </View>
       )}
 
-      {/* <View style={styles.stepsContainer}>
-        <View style={styles.step}>
-          {steps.analyzing && (
-            <Ionicons name="checkmark-circle" size={24} color="green" />
-          )}
-          <Text style={styles.stepText}>Analyzing image</Text>
-        </View>
-        <View style={styles.step}>
-          {steps.detecting && (
-            <Ionicons name="checkmark-circle" size={24} color="green" />
-          )}
-          <Text style={styles.stepText}>Detecting leaves</Text>
-        </View>
-        <View style={styles.step}>
-          {steps.identifying && (
-            <Ionicons name="checkmark-circle" size={24} color="green" />
-          )}
-          <Text style={styles.stepText}>Identifying plant</Text>
-        </View>
-      </View> */}
-
       <View style={styles.stepsContainer}>
         <Animated.View style={[styles.step, analyzingStyle]}>
           {steps.analyzing && (
-            <Ionicons name="checkmark-circle" size={24} color="green" />
+            <Ionicons name="checkmark-circle" size={24} color="#32c759" />
           )}
           <Text style={styles.stepText}>Analyzing image</Text>
         </Animated.View>
         <Animated.View style={[styles.step, detectingStyle]}>
           {steps.detecting && (
-            <Ionicons name="checkmark-circle" size={24} color="green" />
+            <Ionicons name="checkmark-circle" size={24} color="#32c759" />
           )}
           <Text style={styles.stepText}>Detecting leaves</Text>
         </Animated.View>
         <Animated.View style={[styles.step, identifyingStyle]}>
           {steps.identifying && (
-            <Ionicons name="checkmark-circle" size={24} color="green" />
+            <Ionicons name="checkmark-circle" size={24} color="#32c759" />
           )}
           <Text style={styles.stepText}>Identifying plant</Text>
         </Animated.View>
       </View>
+      {/* <TouchableOpacity
+        style={styles.scanButton}
+        activeOpacity={0.9}
+        // onPress={()=>{refRBSheet.current.open()}}
+        onPress={handleScan}
+        disabled={isScanning}
+      >
+        {isScanning ? (
+          <View style={styles.statusContainer}>
+            <ActivityIndicator size="small" color="#fff" />
+            <Text style={styles.statusText}>{status}</Text>
+          </View>
+        ) : (
+          <Text style={styles.scanButtonText}>Start Analysis</Text>
+        )}
+      </TouchableOpacity> */}
+      {/* <WarningAlert /> */}
+      <RBSheet
+        ref={refRBSheet}
+        height={600}
+        openDuration={250}
+        dragFromTopOnly={true}
+        closeOnDragDown
+        customStyles={{
+          container: {
+            borderTopLeftRadius: 10,
+            borderTopRightRadius: 10,
+            elevation: 20,
+          },
+          draggableIcon: {
+            backgroundColor: "#dedede",
+          },
+        }}
+      >
+        <PlantsList onSelectPlant={handleSelectPlant} />
+      </RBSheet>
     </View>
   );
 };
@@ -188,10 +239,12 @@ const styles = StyleSheet.create({
   headerContainer: {
     padding: 20,
     alignItems: "center",
-    height: 500,
+    height: 550,
     width: "100%",
-    backgroundColor: "rgba(0, 0, 0, 0.1)",
-    borderRadius: 12,
+    // backgroundColor: "rgba(0, 0, 0, 0.1)",
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    marginTop: 150,
   },
   header: {
     height: 48,
@@ -200,6 +253,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 12,
+    marginTop: 24,
   },
   headerIcon: {
     backgroundColor: "rgba(0, 0, 0, 0.3)",
@@ -210,16 +264,30 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   scannedImage: {
-    width: 300,
+    width: "100%",
     height: 300,
-    resizeMode: "contain",
+    resizeMode: "cover", //i will use contain later contain
     marginBottom: 16,
     borderRadius: 24,
+
+    // borderWidth: 4,
+    // borderColor: "#ccc",
+    // borderRadius: 16,
+    // shadowColor: "#000",
+    // shadowOffset: {
+    //   width: 0,
+    //   height: 2,
+    // },
+    // shadowOpacity: 0.25,
+    // shadowRadius: 3.84,
+    // elevation: 5,
+    // overflow: "hidden",
   },
   statusMessage: {
     fontSize: 16,
     color: "#666",
     marginTop: 8,
+    marginBottom: 24,
   },
   statusContainer: {
     display: "flex",
@@ -237,11 +305,12 @@ const styles = StyleSheet.create({
   scanButton: {
     width: "80%",
     height: 48,
-    backgroundColor: "#38a169", // green-500
+    backgroundColor: "#32c759", // green-500
     borderRadius: 12,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    marginTop:30
   },
   scanButtonText: {
     fontSize: 18,
@@ -249,8 +318,9 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   stepsContainer: {
-    marginTop: 16,
+    marginTop: -60,
     paddingHorizontal: 16,
+    alignItems: "center",
   },
   step: {
     flexDirection: "row",
@@ -261,6 +331,32 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginLeft: 8,
   },
+  imageContainer: {
+    width: 300,
+    height: 300,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  // imageContainer: {
+  //   width: 320,
+  //   height: 320,
+  //   justifyContent: "center",
+  //   alignItems: "center",
+  //   marginBottom: 16,
+  //   borderWidth: 4,
+  //   borderColor: "#ccc",
+  //   borderRadius: 16,
+  //   shadowColor: "#000",
+  //   shadowOffset: {
+  //     width: 0,
+  //     height: 2,
+  //   },
+  //   shadowOpacity: 0.25,
+  //   shadowRadius: 3.84,
+  //   elevation: 5,
+  //   overflow: "hidden",
+  // },
 });
 
 export default PlantScanner;

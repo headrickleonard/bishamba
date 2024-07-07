@@ -7,39 +7,53 @@ import {
   FlatList,
   Image,
   Dimensions,
-  Pressable
+  Pressable,
+  ScrollView,
 } from "react-native";
 import { TextInput, TouchableOpacity } from "react-native-gesture-handler";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import COLORS from "../const/colors";
-import plants from "../const/plants";
+import plants, { medicines } from "../const/plants";
 import ScreenWrapper from "../components/shared/ScreenWrapper";
 const width = Dimensions.get("window").width / 2 - 30;
 
 const HomeScreen = ({ navigation }) => {
   const [catergoryIndex, setCategoryIndex] = React.useState(0);
 
-  const categories = ["POPULAR", "ORGANIC", "INDOORS", "SYNTHETIC"];
+  const categories = [
+    "HERBICIDE",
+    "PESTICIDE",
+    "FUNGICIDE",
+    "INSECTICIDE",
+    "FERTILIZER",
+    "NEMATICIDE",
+    "RODENTICIDE",
+    "DEFOLIANT",
+    "PLANT GROWTH REGULATOR",
+    "ADJUVANT",
+  ];
 
   const CategoryList = () => {
     return (
       <View style={style.categoryContainer}>
-        {categories.map((item, index) => (
-          <TouchableOpacity
-            key={index}
-            activeOpacity={0.8}
-            onPress={() => setCategoryIndex(index)}
-          >
-            <Text
-              style={[
-                style.categoryText,
-                catergoryIndex === index && style.categoryTextSelected,
-              ]}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {categories.map((item, index) => (
+            <TouchableOpacity
+              key={index}
+              activeOpacity={0.8}
+              onPress={() => setCategoryIndex(index)}
             >
-              {item}
-            </Text>
-          </TouchableOpacity>
-        ))}
+              <Text
+                style={[
+                  style.categoryText,
+                  catergoryIndex === index && style.categoryTextSelected,
+                ]}
+              >
+                {item}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       </View>
     );
   };
@@ -140,7 +154,7 @@ const HomeScreen = ({ navigation }) => {
               Bishamba
             </Text>
           </View>
-          <Pressable onPress={() => navigation.navigate("Results")}>
+          <Pressable onPress={() => navigation.navigate("Notifications")}>
             <Icon name="notifications" size={28} color={"gray"} />
           </Pressable>
         </View>
@@ -149,9 +163,9 @@ const HomeScreen = ({ navigation }) => {
             <Icon name="search" size={25} style={{ marginLeft: 20 }} />
             <TextInput placeholder="Search" style={style.input} />
           </View>
-          <View style={style.sortBtn}>
+          <Pressable style={style.sortBtn} onPress={()=>{navigation.navigate('ShopsList')}}>
             <Icon name="sort" size={30} color={COLORS.white} />
-          </View>
+          </Pressable>
         </View>
         <CategoryList />
         <FlatList
@@ -162,7 +176,8 @@ const HomeScreen = ({ navigation }) => {
             paddingBottom: 50,
           }}
           numColumns={2}
-          data={plants}
+          data={medicines}
+          // data={plants}
           renderItem={({ item }) => {
             return <Card plant={item} />;
           }}
@@ -179,7 +194,7 @@ const style = StyleSheet.create({
     marginBottom: 20,
     justifyContent: "space-between",
   },
-  categoryText: { fontSize: 16, color: "grey", fontWeight: "bold" },
+  categoryText: { fontSize: 16, color: "grey", fontWeight: "bold" ,marginHorizontal:12},
   categoryTextSelected: {
     color: COLORS.green,
     paddingBottom: 5,

@@ -4,22 +4,27 @@ import Header from "../components/result/Header";
 import PlantDetails from "../components/result/PlantDetails";
 import styles from "../styles/styles";
 import WarningAlert from "../components/result/WarningAlert";
-const ResultScreen = () => {
+import ScreenWrapper from "../components/shared/ScreenWrapper";
+
+const ResultScreen = ({route}) => {
   const scrollY = useRef(new Animated.Value(0)).current;
+  const { photoUri, plantName, plantDetails } = route.params;
 
   return (
     <Animated.ScrollView
-      indicatorStyle="black"
-      onScroll={Animated.event(
-        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+    indicatorStyle="black"
+    onScroll={Animated.event(
+      [{ nativeEvent: { contentOffset: { y: scrollY } } }],
         { useNativeDriver: false }
       )}
       scrollEventThrottle={16}
-      
-    >
-      <Header scrollY={scrollY} />
+      showsVerticalScrollIndicator={false}
+      >
+      <ScreenWrapper>
+      <Header scrollY={scrollY} photoUri={photoUri}/>
       {/* <WarningAlert/> */}
-      <PlantDetails />
+      <PlantDetails  plantDetails={plantDetails}  />
+    </ScreenWrapper>
     </Animated.ScrollView>
   );
 };

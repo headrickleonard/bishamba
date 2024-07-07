@@ -16,6 +16,9 @@ import Notification from './../screens/Notification';
 import ResultsScreen from './../screens/ResultScreen';
 import CreatePostScreen from "../screens/CreatePostScreen";
 import PlantScanner from "../screens/PlantScanner";
+import { transition } from "../config";
+import ChatDetailScreen from "../screens/ChatDetailScreen";
+import Shops from "../screens/Shops";
 
 function RootStack() {
   const Stack = createStackNavigator();
@@ -68,14 +71,24 @@ function RootStack() {
         component={CreatePostScreen}
       />
       <Stack.Screen
-        options={{
-          headerShown: false,
-          gestureEnabled: true,
-        }}
         name="PlantScanner"
-        // component={Index}
-        // component={Home}
         component={PlantScanner}
+        options={transition}
+      />
+      <Stack.Screen
+        name="ShopsList"
+        component={Shops}
+        options={transition}
+        // options={{
+        //   headerShown:true,
+        //   headerTitle:"All shops",
+        //   headerMode:"float",
+        // }}
+      />
+      <Stack.Screen
+        name="Chat"
+        component={ChatDetailScreen}
+        options={transition}
       />
       <Stack.Screen
         options={{
@@ -89,27 +102,7 @@ function RootStack() {
         name="Details"
         // component={Index}
         component={Details}
-        options={{
-          headerShown: false,
-          gestureEnabled: true,
-          gestureDirection: "horizontal",
-          gestureResponseDistance: 150,
-          cardStyleInterpolator: ({ current, next, layouts }) => {
-            return {
-              cardStyle: {
-                transform: [
-                  {
-                    translateX: current.progress.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [layouts.screen.width, 0],
-                      extrapolateRight: "clamp",
-                    }),
-                  },
-                ],
-              },
-            };
-          },
-        }}
+        options={transition}
       />
       <Stack.Screen
         options={{
@@ -123,27 +116,7 @@ function RootStack() {
       <Stack.Screen
         name="Media"
         component={SocialMedia}
-        options={{
-          headerShown: false,
-          gestureEnabled: true,
-          gestureDirection: "horizontal",
-          gestureResponseDistance: 150,
-          cardStyleInterpolator: ({ current, next, layouts }) => {
-            return {
-              cardStyle: {
-                transform: [
-                  {
-                    translateX: current.progress.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [layouts.screen.width, 0],
-                      extrapolateRight: "clamp",
-                    }),
-                  },
-                ],
-              },
-            };
-          },
-        }}
+        options={transition}
       />
       <Stack.Screen
         name="Shops"
@@ -173,79 +146,22 @@ function RootStack() {
       <Stack.Screen
         name="Camera"
         component={CameraScreen}
-        options={{
-          headerShown: false,
-          gestureEnabled: true,
-          gestureDirection: "horizontal",
-          gestureResponseDistance: 150,
-          cardStyleInterpolator: ({ current, next, layouts }) => {
-            return {
-              cardStyle: {
-                transform: [
-                  {
-                    translateX: current.progress.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [layouts.screen.width, 0],
-                      extrapolateRight: "clamp",
-                    }),
-                  },
-                ],
-              },
-            };
-          },
-        }}
+        options={transition}
       />
       <Stack.Screen
         name="Shop"
         component={Shop}
-        options={{
-          headerShown: false,
-          gestureEnabled: true,
-          gestureDirection: "horizontal",
-          gestureResponseDistance: 150,
-          cardStyleInterpolator: ({ current, next, layouts }) => {
-            return {
-              cardStyle: {
-                transform: [
-                  {
-                    translateX: current.progress.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [layouts.screen.width, 0],
-                      extrapolateRight: "clamp",
-                    }),
-                  },
-                ],
-              },
-            };
-          },
-        }}
+        options={transition}
       />
       <Stack.Screen
         name="ProductDetails"
         component={ProductDetails}
-        options={{
-          headerShown: false,
-          gestureEnabled: true,
-          gestureDirection: "horizontal",
-          gestureResponseDistance: 150,
-          cardStyleInterpolator: ({ current, next, layouts }) => {
-            return {
-              cardStyle: {
-                transform: [
-                  {
-                    translateX: current.progress.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [layouts.screen.width, 0],
-                      extrapolateRight: "clamp",
-                    }),
-                  },
-                ],
-              },
-            };
-          },
-        }}
+        options={transition}
       />
-      <Stack.Screen name="Results" component={ResultsScreen} options={{ title: 'Results', headerShown: false }} />
+      <Stack.Screen name="Results"
+        component={ResultsScreen}
+        options={transition}
+      />
 
     </Stack.Navigator>
   );

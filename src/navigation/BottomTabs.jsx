@@ -17,6 +17,9 @@ import TabView from "../components/social/TabView";
 import ResultsScreen from "../screens/ResultScreen";
 import ScanHistory from "../screens/ScanHistory";
 import PlantScanner from "../screens/PlantScanner";
+import PostCard from "../components/social/cards/PostCard";
+import Shops from "../screens/Shops";
+import { transition } from "../config";
 
 const Tab = createBottomTabNavigator();
 
@@ -68,7 +71,6 @@ const BottomTabs = () => {
                   />
                 </View>
               );
-              break;
             case "Shops":
               iconName = focused
                 ? "comment-quote-outline"
@@ -130,8 +132,8 @@ const BottomTabs = () => {
       />
       <Tab.Screen
         name="Diagnose"
-        // component={DiagnoseScreen}
-        component={OnboardingScreen}
+        component={ScanHistory}
+        // component={OnboardingScreen}
         options={{
           headerShown: false,
           gestureEnabled: true,
@@ -147,15 +149,14 @@ const BottomTabs = () => {
       />
       <Tab.Screen
         name="Shops"
-        // component={TabView}
+        component={TabView}
         // component={SocialFeedScreen}
         // component={ScanHistory}
         // component={ResultsScreen}
-        component={PlantScanner}
-        options={{
-          headerShown: false,
-          gestureEnabled: true,
-        }}
+        // component={PlantScanner}
+        // component={PostCard}
+        // component={Shops}
+        options={transition}
       />
       <Tab.Screen
         name="Account"

@@ -2,6 +2,8 @@ import { StyleSheet, Dimensions } from 'react-native';
 
 const { height } = Dimensions.get('window');
 const HEIGHT_FACTOR = 50;
+export const PRIMARY_COLOR = "#32c759"
+export const SECONDARY_COLOR="#007bff"
 
 const styles = StyleSheet.create({
   header: {
@@ -49,8 +51,8 @@ const styles = StyleSheet.create({
   overviewText: {
     marginLeft: 8,
     fontSize: 18,
-    color:"#6d6d6e",
-    fontFamily:"serif"
+    color: "#6d6d6e",
+    fontFamily: "serif"
   },
   boldText: {
     fontWeight: 'bold',
@@ -58,5 +60,4 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
 });
-
 export default styles;

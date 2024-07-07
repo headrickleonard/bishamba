@@ -11,10 +11,26 @@ import BottomTabs from "./src/navigation/BottomTabs";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import NetInfo from '@react-native-community/netinfo';
 import NoInternetScreen from './src/screens/NoInternetScreen';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import OnboardingScreen from './src/screens/OnboardingScreen';
+import { createStackNavigator } from '@react-navigation/stack';
+
+const Stack = createStackNavigator();
 
 export default function App() {
   const [isConnected, setIsConnected] = useState(true);
+  const [isFirstLaunch, setIsFirstLaunch] = useState(null);
 
+  useEffect(() => {
+    AsyncStorage.getItem('alreadyLaunched').then(value => {
+      if (value == null) {
+        AsyncStorage.setItem('alreadyLaunched', 'true');
+        setIsFirstLaunch(true);
+      } else {
+        setIsFirstLaunch(false);
+      }
+    });
+  }, []);
   const checkConnection = () => {
     NetInfo.fetch().then(state => {
       setIsConnected(state.isConnected);
@@ -32,6 +48,9 @@ export default function App() {
   if (!isConnected) {
     return <NoInternetScreen retryConnection={checkConnection} />;
   }
+  if (isFirstLaunch === null) {
+    return null; // Render a loading screen or nothing while checking AsyncStorage
+  }
   
   return (
     <Provider>
@@ -43,7 +62,15 @@ export default function App() {
             animated
             backgroundColor="transparent"
           />
-          <BottomTabs />
+           {isFirstLaunch ? (
+            <Stack.Navigator>
+              <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
+              <Stack.Screen name="MainApp" component={BottomTabs} options={{ headerShown: false }} />
+            </Stack.Navigator>
+          ) : (
+            <BottomTabs />
+          )}
+          {/* <BottomTabs /> */}
           {/* <RootStack /> */}
           {/* <RootNavigation/> */}
         </NavigationContainer>

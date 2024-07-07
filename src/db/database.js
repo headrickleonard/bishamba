@@ -17,9 +17,19 @@ export const createTable = () => {
         timestamp TEXT
       );`
     );
+    tx.executeSql(
+      'CREATE TABLE IF NOT EXISTS history (id INTEGER PRIMARY KEY AUTOINCREMENT, term TEXT);'
+    );
+    tx.executeSql(
+      `CREATE TABLE IF NOT EXISTS messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        text TEXT,
+        sender TEXT,
+        timestamp TEXT
+      );`
+    );
   });
 };
-
 export const insertDisease = (name, confidence, detections, symptoms, effects, medication, imageUri) => {
   const symptomsJson = JSON.stringify(symptoms);
   const effectsJson = JSON.stringify(effects);
@@ -31,7 +41,6 @@ export const insertDisease = (name, confidence, detections, symptoms, effects, m
     );
   });
 };
-
 export const getDiseases = (callback) => {
   db.transaction(tx => {
     tx.executeSql(
@@ -45,6 +54,37 @@ export const getDiseases = (callback) => {
         }));
         callback(diseases);
       }
+    );
+  });
+};
+export const insertSearchTerm = (term) => {
+  db.transaction(tx => {
+    tx.executeSql('INSERT INTO history (term) VALUES (?);', [term]);
+  });
+};
+export const getSearchHistory = (callback) => {
+  db.transaction(tx => {
+    tx.executeSql('SELECT * FROM history;', [], (_, { rows: { _array } }) => {
+      callback(_array);
+    });
+  });
+};
+export const getMessages = (callback) => {
+  db.transaction(tx => {
+    tx.executeSql(
+      'SELECT * FROM messages;',
+      [],
+      (_, { rows: { _array } }) => {
+        callback(_array);
+      }
+    );
+  });
+};
+export const insertMessage = (text, sender, timestamp) => {
+  db.transaction(tx => {
+    tx.executeSql(
+      'INSERT INTO messages (text, sender, timestamp) VALUES (?, ?, ?);',
+      [text, sender, timestamp]
     );
   });
 };

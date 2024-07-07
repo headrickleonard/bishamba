@@ -16,7 +16,7 @@ import ScreenWrapper from "../components/shared/ScreenWrapper";
 
 const MAX_LENGTH = screens.length;
 
-const OnboardingScreen = () => {
+const OnboardingScreen = ({navigation}) => {
   const aref = useAnimatedRef();
   const [index, setIndex] = useState(0);
   const scrollX = useSharedValue(0);
@@ -32,6 +32,8 @@ const OnboardingScreen = () => {
         animated: true,
       });
       setIndex(index + 1);
+    }else {
+      navigation.replace('MainApp'); // Navigate to the main tabs
     }
   };
   return (
