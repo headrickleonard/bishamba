@@ -14,7 +14,7 @@ import ScreenWrapper from "../components/shared/ScreenWrapper";
 import { PRIMARY_COLOR } from "../styles/styles";
 
 const Details = ({ navigation, route }) => {
-  const plant = route.params;
+  const product = route.params;
   const [value, setValue] = React.useState(1);
 
   return (
@@ -39,8 +39,10 @@ const Details = ({ navigation, route }) => {
         </View>
         <View style={style.imageContainer}>
           <Image
-            source={plant.img}
-            style={{ resizeMode: "contain", flex: 1 }}
+            source={{uri:product.images.main}}
+            // style={{ resizeMode: "contain", flex: 1 }}
+            style={{ width: "100%", height: "100%", resizeMode: "contain",flex:1 }}
+
           />
         </View>
         <View style={style.detailsContainer}>
@@ -53,7 +55,7 @@ const Details = ({ navigation, route }) => {
           >
             <View style={style.line} />
             <Text style={{ fontSize: 18, fontWeight: "bold" }}>
-              Best choice
+              {product.brand}
             </Text>
           </View>
           <View
@@ -66,7 +68,7 @@ const Details = ({ navigation, route }) => {
             }}
           >
             <Text style={{ fontSize: 22, fontWeight: "bold" }}>
-              {plant.name}
+              {product.name}
             </Text>
             <View style={style.priceTag}>
               <Text
@@ -77,7 +79,7 @@ const Details = ({ navigation, route }) => {
                   fontSize: 16,
                 }}
               >
-                ${plant.price}
+                ${product.price}
               </Text>
             </View>
           </View>
@@ -91,7 +93,7 @@ const Details = ({ navigation, route }) => {
                 marginTop: 10,
               }}
             >
-              {plant.about}
+              {product.description}
             </Text>
             <View
               style={{
@@ -129,7 +131,7 @@ const Details = ({ navigation, route }) => {
                     fontWeight: "bold",
                   }}
                 >
-                  Buy
+                  Connect
                 </Text>
               </View>
             </View>
@@ -182,11 +184,11 @@ const style = StyleSheet.create({
   borderBtnText: { fontWeight: "bold", fontSize: 28 },
   buyBtn: {
     width: 130,
-    height: 50,
+    height: 40,
     backgroundColor: COLORS.green,
     justifyContent: "center",
     alignItems: "center",
-    borderRadius: 30,
+    borderRadius: 12,
   },
   priceTag: {
     backgroundColor: COLORS.green,

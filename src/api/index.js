@@ -10,15 +10,20 @@ import { BASE_URL } from '../constants';
  * @param {object} headers - Additional request headers (default is an empty object)
  * @returns {Promise<object>} - The response data
  */
-const apiCall = async (url, method = 'GET', data = {}, headers = {}) => {
+const apiCall = async (url, method = 'GET', data = {}, headers = {}, accessToken = '') => {
     try {
+        if (accessToken) {
+            headers['Authorization'] = `Bearer ${accessToken}`;
+        }
+
         const response = await axios({
             url: `${BASE_URL}${url}`,
-            method,
+            method:method,
             data,
             headers,
         });
-        return response.data;
+        // console.log("the response from ", url, " is ", response.data[0]);
+        return response.data[0];
     } catch (error) {
         console.error(`Error during ${method} request to ${url}:`, error);
         throw error;
@@ -96,12 +101,11 @@ export const detectDisease = async (imageUrl, setDiseaseResult) => {
     }
 };
 
-
 /**
  * Fetch all products (agrochemicals)
  * @returns {Promise<object[]>} - The list of products
  */
-export const getAllProducts = () => apiCall('/products');
+export const getAllProducts = () => apiCall('products-mng/view-product');
 
 /**
  * Buy a chemical
@@ -181,7 +185,7 @@ export const viewAllMyShops = (userId) =>
  * View all shops
  * @returns {Promise<object[]>} - The list of all shops
  */
-export const viewAllShops = () => apiCall('/shops');
+export const viewAllShops = () => apiCall('shop-mng/all-shops');
 
 /**
  * View all diseases
@@ -193,4 +197,34 @@ export const viewAllDiseases = () => apiCall('/diseases');
  * View all categories
  * @returns {Promise<object[]>} - The list of all categories
  */
-export const viewAllCategories = () => apiCall('/categories');
+export const viewAllCategories = () => apiCall('category-mng/view-category');
+
+/**
+ * Send notification to shop owner when a chemical is purchased
+ * @param {object} shop - The shop information
+ * @param {number} totalPrice - The total price of the purchase
+ * @param {string} token - The access token for authentication
+ * @returns {Promise<object>} - The notification sending confirmation
+ */
+const sendNotificationToShopOwner = async (shop, totalPrice, token) => {
+    try {
+        const notificationData = {
+            shopId: shop.id,
+            productId: shop.productId, // Adjust according to your data structure
+            quantity: shop.quantity,
+            totalPrice,
+            userLocation: shop.userLocation,
+            notificationChannel: 'SMS', // Assuming SMS notification
+            notificationType: 'EXTERNAL',
+            imageUrl: 'https://placehold.co/400', // Placeholder image URL
+        };
+
+        const response = await apiCall('/sendNotificationToShopOwner', 'POST', notificationData, { Authorization: `Bearer ${token}` });
+        return response;
+    } catch (error) {
+        console.error('Error sending notification to shop owner:', error);
+        throw error;
+    }
+};
+
+

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   SafeAreaView,
@@ -9,35 +9,96 @@ import {
   Dimensions,
   Pressable,
   ScrollView,
+  RefreshControl,
 } from "react-native";
 import { TextInput, TouchableOpacity } from "react-native-gesture-handler";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import COLORS from "../const/colors";
-import plants, { medicines } from "../const/plants";
 import ScreenWrapper from "../components/shared/ScreenWrapper";
+import { viewAllCategories, getAllProducts } from "../api";
+
 const width = Dimensions.get("window").width / 2 - 30;
 
 const HomeScreen = ({ navigation }) => {
-  const [catergoryIndex, setCategoryIndex] = React.useState(0);
+  const [categoryIndex, setCategoryIndex] = useState(0);
+  const [categories, setCategories] = useState([]);
+  const [error, setError] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const categories = [
-    "HERBICIDE",
-    "PESTICIDE",
-    "FUNGICIDE",
-    "INSECTICIDE",
-    "FERTILIZER",
-    "NEMATICIDE",
-    "RODENTICIDE",
-    "DEFOLIANT",
-    "PLANT GROWTH REGULATOR",
-    "ADJUVANT",
-  ];
+  const fetchCategories = async () => {
+    try {
+      const response = await viewAllCategories();
+      if (response && response.status === "success" && response.data) {
+        const categoryNames = ["All", ...response.data.map((item) => item.categoryName)];
+        setCategories(categoryNames);
+        console.log("The categories list has:", categoryNames);
+      } else {
+        setError("Failed to fetch categories");
+      }
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      setError("Error fetching categories");
+    }
+  };
+
+  const fetchAllProducts = async () => {
+    try {
+      const response = await getAllProducts();
+      if (response && response.status === "success" && response.data) {
+        setProducts(response.data);
+        setFilteredProducts(response.data); // Set initial filtered products to all products
+        console.log("The products list has:", response.data);
+      } else {
+        setError("Failed to fetch products");
+      }
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      setError("Error fetching products");
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchCategories();
+    await fetchAllProducts();
+    setRefreshing(false);
+  };
+
+  useEffect(() => {
+    fetchCategories();
+    fetchAllProducts();
+  }, []);
+
+  useEffect(() => {
+    filterProducts();
+  }, [searchQuery, categoryIndex]);
+
+  const filterProducts = () => {
+    let filtered = products;
+
+    if (categoryIndex > 0) {
+      filtered = filtered.filter(
+        (product) => product.category === categories[categoryIndex]
+      );
+    }
+
+    if (searchQuery) {
+      filtered = filtered.filter((product) =>
+        product.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    setFilteredProducts(filtered);
+  };
 
   const CategoryList = () => {
     return (
       <View style={style.categoryContainer}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {categories.map((item, index) => (
+          {categories?.map((item, index) => (
             <TouchableOpacity
               key={index}
               activeOpacity={0.8}
@@ -46,7 +107,7 @@ const HomeScreen = ({ navigation }) => {
               <Text
                 style={[
                   style.categoryText,
-                  catergoryIndex === index && style.categoryTextSelected,
+                  categoryIndex === index && style.categoryTextSelected,
                 ]}
               >
                 {item}
@@ -58,11 +119,11 @@ const HomeScreen = ({ navigation }) => {
     );
   };
 
-  const Card = ({ plant }) => {
+  const Card = ({ product }) => {
     return (
       <TouchableOpacity
         activeOpacity={0.8}
-        onPress={() => navigation.navigate("Details", plant)}
+        onPress={() => navigation.navigate("Details", product)}
       >
         <View style={style.card}>
           <View style={{ alignItems: "flex-end" }}>
@@ -73,7 +134,7 @@ const HomeScreen = ({ navigation }) => {
                 borderRadius: 20,
                 justifyContent: "center",
                 alignItems: "center",
-                backgroundColor: plant.like
+                backgroundColor: product.isInStock
                   ? "rgba(245, 42, 42,0.2)"
                   : "rgba(0,0,0,0.2) ",
               }}
@@ -81,7 +142,7 @@ const HomeScreen = ({ navigation }) => {
               <Icon
                 name="favorite"
                 size={18}
-                color={plant.like ? COLORS.red : COLORS.black}
+                color={product?.isInStock ? COLORS.red : COLORS.black}
               />
             </View>
           </View>
@@ -93,13 +154,14 @@ const HomeScreen = ({ navigation }) => {
             }}
           >
             <Image
-              source={plant.img}
-              style={{ flex: 1, resizeMode: "contain" }}
+              source={{ uri: product.images.main }}
+              style={{ width: "100%", height: "100%", resizeMode: "contain", flex: 1 }}
+              onError={() => console.log("Error loading image")}
             />
           </View>
 
-          <Text style={{ fontWeight: "bold", fontSize: 17, marginTop: 10 }}>
-            {plant.name}
+          <Text style={{ fontWeight: "bold", fontSize: 15, marginTop: 10 }}>
+            {product.name}
           </Text>
           <View
             style={{
@@ -109,7 +171,7 @@ const HomeScreen = ({ navigation }) => {
             }}
           >
             <Text style={{ fontSize: 19, fontWeight: "bold" }}>
-              ${plant.price}
+              ${product.price}
             </Text>
             <View
               style={{
@@ -136,6 +198,7 @@ const HomeScreen = ({ navigation }) => {
       </TouchableOpacity>
     );
   };
+
   return (
     <ScreenWrapper>
       <SafeAreaView
@@ -147,7 +210,6 @@ const HomeScreen = ({ navigation }) => {
       >
         <View style={style.header}>
           <View>
-            {/* <Text style={{fontSize: 25, fontWeight: 'bold'}}>Welcome to</Text> */}
             <Text
               style={{ fontSize: 36, color: COLORS.green, fontWeight: "bold" }}
             >
@@ -161,9 +223,19 @@ const HomeScreen = ({ navigation }) => {
         <View style={{ marginTop: 30, flexDirection: "row" }}>
           <View style={style.searchContainer}>
             <Icon name="search" size={25} style={{ marginLeft: 20 }} />
-            <TextInput placeholder="Search" style={style.input} />
+            <TextInput
+              placeholder="Search"
+              style={style.input}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
           </View>
-          <Pressable style={style.sortBtn} onPress={()=>{navigation.navigate('ShopsList')}}>
+          <Pressable
+            style={style.sortBtn}
+            onPress={() => {
+              navigation.navigate("ShopsList");
+            }}
+          >
             <Icon name="sort" size={30} color={COLORS.white} />
           </Pressable>
         </View>
@@ -176,11 +248,14 @@ const HomeScreen = ({ navigation }) => {
             paddingBottom: 50,
           }}
           numColumns={2}
-          data={medicines}
-          // data={plants}
+          data={filteredProducts}
           renderItem={({ item }) => {
-            return <Card plant={item} />;
+            return <Card product={item} />;
           }}
+          keyExtractor={(item) => item.id.toString()}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
         />
       </SafeAreaView>
     </ScreenWrapper>
@@ -194,7 +269,13 @@ const style = StyleSheet.create({
     marginBottom: 20,
     justifyContent: "space-between",
   },
-  categoryText: { fontSize: 16, color: "grey", fontWeight: "bold" ,marginHorizontal:12},
+  categoryText: {
+    fontSize: 16,
+    color: "grey",
+    fontWeight: "bold",
+    marginHorizontal: 12,
+    textTransform: "uppercase",
+  },
   categoryTextSelected: {
     color: COLORS.green,
     paddingBottom: 5,
@@ -239,4 +320,5 @@ const style = StyleSheet.create({
     alignItems: "center",
   },
 });
+
 export default HomeScreen;

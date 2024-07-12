@@ -88,7 +88,10 @@ function RootStack() {
       <Stack.Screen
         name="Chat"
         component={ChatDetailScreen}
-        options={transition}
+        options={{
+          headerShown:true,
+          headerTitle:"Message"
+        }}
       />
       <Stack.Screen
         options={{

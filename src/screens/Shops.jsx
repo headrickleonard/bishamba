@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,62 +8,16 @@ import {
   Image,
   SafeAreaView,
   TouchableOpacity,
-  Button,
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
 import Octicons from "react-native-vector-icons/Octicons";
 import { PRIMARY_COLOR } from "../styles/styles";
-
-const shops = [
-  {
-    name: "Yau Sabrina Jackson Agro-Vet",
-    image: "https://i.pravatar.cc/300",
-    verified: true,
-  },
-  {
-    name: "Tomas Hilton Agro-Vet",
-    image: "https://i.pravatar.cc/300",
-    verified: false,
-  },
-  {
-    name: "Jason Rey Agro-Vet",
-    image: "https://i.pravatar.cc/300",
-    verified: true,
-  },
-  {
-    name: "Sophia Ashton Agro-Vet",
-    image: "https://i.pravatar.cc/300",
-    verified: false,
-  },
-  {
-    name: "Amori Cilton Agro-Vet",
-    image: "https://i.pravatar.cc/300",
-    verified: true,
-  },
-  {
-    name: "Ashton Lee Agro-Vet",
-    image: "https://i.pravatar.cc/300",
-    verified: false,
-  },
-  {
-    name: "David Jolie Agro-Vet",
-    image: "https://i.pravatar.cc/300",
-    verified: true,
-  },
-  {
-    name: "Aaron Garey Agro-Vet",
-    image: "https://i.pravatar.cc/300",
-    verified: false,
-  },
-];
-
-const trimName = (name, maxLength, isExpanded) => {
-  if (isExpanded) return name;
-  return name.length > maxLength ? name.substring(0, maxLength) + "..." : name;
-};
+import { viewAllShops } from "../api";
+import Loader from "../components/loaders/List";
 
 const Shops = () => {
   const [expandedNames, setExpandedNames] = useState({});
+  const [shopsList, setShopsList] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
 
   const toggleExpand = (name) => {
@@ -73,9 +27,40 @@ const Shops = () => {
     }));
   };
 
-  const filteredShops = shops.filter((shop) =>
-    shop.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const fetchShops = async () => {
+    try {
+      const response = await viewAllShops();
+      console.log("API Response:", response); // Log the API response to inspect its structure
+      const shops = response.data;
+      setShopsList(Array.isArray(shops) ? shops : []); // Ensure shopsList is an array
+    } catch (error) {
+      console.error("Error fetching shops:", error);
+      setShopsList([]); // Set shopsList to an empty array on error
+    }
+  };
+
+  useEffect(() => {
+    fetchShops();
+  }, []);
+
+  const filteredShops = shopsList.filter((shop) =>
+    shop.shopName.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const trimName = (name, maxLength, isExpanded) => {
+    if (isExpanded) return name;
+    return name.length > maxLength
+      ? name.substring(0, maxLength) + "..."
+      : name;
+  };
+
+  if (shopsList === null) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Text>Loading...</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -84,7 +69,6 @@ const Shops = () => {
         <TextInput
           style={styles.searchInput}
           placeholder="Search agro-vet shops"
-          cursorColor={"green"}
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
@@ -93,34 +77,40 @@ const Shops = () => {
         </TouchableOpacity>
       </View>
       <Text style={styles.title}>All Shops</Text>
-      <FlatList
-        data={filteredShops}
-        keyExtractor={(item) => item.name}
-        numColumns={3}
-        renderItem={({ item }) => (
-          <View style={styles.shopContainer}>
-            <View style={styles.imageContainer}>
-              <Image source={{ uri: item.image }} style={styles.profileImage} />
-              {item.verified && (
-                <Octicons
-                  name="verified"
-                  size={20}
-                  color={PRIMARY_COLOR}
-                  style={styles.checkmark}
-                />
-              )}
-            </View>
+      {shopsList.length > 0 ? (
+        <FlatList
+          data={filteredShops}
+          keyExtractor={(item) => item.shopId}
+          numColumns={3}
+          renderItem={({ item }) => (
             <TouchableOpacity
-              onPress={() => toggleExpand(item.name)}
-              activeOpacity={0.8}
+              style={styles.shopContainer}
+              onPress={() => toggleExpand(item.shopName)}
             >
+              <View style={styles.imageContainer}>
+                <Image
+                  source={{ uri: "https://i.pravatar.cc/300" }}
+                  style={styles.profileImage}
+                />
+                {item.isVerified && (
+                  <Octicons
+                    name="verified"
+                    size={20}
+                    color={PRIMARY_COLOR}
+                    style={styles.checkmark}
+                  />
+                )}
+              </View>
               <Text style={styles.shop}>
-                {trimName(item.name, 10, expandedNames[item.name])}
+                {trimName(item.shopName, 10, expandedNames[item.shopName])}
               </Text>
             </TouchableOpacity>
-          </View>
-        )}
-      />
+          )}
+        />
+      ) : (
+        // <Text style={styles.error}>No shops found.</Text>
+        <Loader />
+      )}
     </SafeAreaView>
   );
 };
@@ -190,11 +180,6 @@ const styles = StyleSheet.create({
   },
   error: {
     color: "red",
-    marginTop: 20,
-  },
-  recent: {
-    fontSize: 18,
-    fontWeight: "bold",
     marginTop: 20,
   },
 });

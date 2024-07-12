@@ -91,31 +91,31 @@ export default TabView = () => {
   });
 
   return (
-      <View style={{ flex: 1 ,marginTop:40}}>
-        <TabBar onPress={(index) => handleTabPress(index)} activeIndex={page} />
-        <Animated.View style={[styles.springContainer, animatedStyle]}>
-          <PagerView
-            ref={ref}
-            scrollEnabled={false}
-            testID={"pager-view"}
-            style={styles.pagerView}
-            initialPage={0}
-          >
-            {Array.from({ length: 4 }).map((_, index) => (
-              <View key={index.toString()} style={styles.pageContainer}>
-                {renderScene(index)}
-              </View>
-            ))}
-          </PagerView>
-          {renderBlur && (
-            <AnimatedBlurView
-              experimentalBlurMethod={"dimezisBlurView"}
-              animatedProps={animatedBlurViewProps}
-              style={[styles.blurView]}
-            />
-          )}
-        </Animated.View>
-      </View>
+    <View style={{ flex: 1, marginTop: 40 }}>
+      <TabBar onPress={(index) => handleTabPress(index)} activeIndex={page} />
+      <Animated.View style={[styles.springContainer, animatedStyle]}>
+        <PagerView
+          ref={ref}
+          scrollEnabled={false}
+          testID={"pager-view"}
+          style={styles.pagerView}
+          initialPage={0}
+        >
+          {Array.from({ length: 4 }).map((_, index) => (
+            <View key={index.toString()} style={styles.pageContainer}>
+              {renderScene(index)}
+            </View>
+          ))}
+        </PagerView>
+        {renderBlur && (
+          <AnimatedBlurView
+            experimentalBlurMethod={"dimezisBlurView"}
+            animatedProps={animatedBlurViewProps}
+            style={[styles.blurView]}
+          />
+        )}
+      </Animated.View>
+    </View>
   );
 };
 

@@ -20,6 +20,8 @@ import PlantScanner from "../screens/PlantScanner";
 import PostCard from "../components/social/cards/PostCard";
 import Shops from "../screens/Shops";
 import { transition } from "../config";
+import SensorAnimation from "../components/Sensema";
+import CircleLoader from "../components/CircleLoader";
 
 const Tab = createBottomTabNavigator();
 
@@ -149,7 +151,8 @@ const BottomTabs = () => {
       />
       <Tab.Screen
         name="Shops"
-        component={TabView}
+        component={CircleLoader}
+        // component={TabView}
         // component={SocialFeedScreen}
         // component={ScanHistory}
         // component={ResultsScreen}

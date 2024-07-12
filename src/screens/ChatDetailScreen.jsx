@@ -1,4 +1,4 @@
-import React, { useState,useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -11,6 +11,17 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { createTable, getMessages, insertMessage } from "../db/database";
+import ScreenWrapper from "../components/shared/ScreenWrapper";
+import {
+  Earth,
+  Heart,
+  Share,
+  Bookmark,
+  AtSign,
+  SmileIcon,
+  GiftIcon,
+  SendHorizontalIcon,
+} from "lucide-react-native";
 
 // const messages = [
 //   { id: '1', text: '941', sender: 'receiver', profilePicture: 'https://i.pravatar.cc/300?img=1', timestamp: '10:00 AM' },
@@ -25,7 +36,7 @@ import { createTable, getMessages, insertMessage } from "../db/database";
 
 const ChatDetailScreen = () => {
   const [messages, setMessages] = useState([]);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     createTable();
@@ -41,13 +52,18 @@ const ChatDetailScreen = () => {
   const sendMessage = (imageUri = null) => {
     const newMessage = {
       text: message,
-      sender: 'sender',
+      sender: "sender",
       timestamp: new Date().toISOString(),
       image: imageUri,
     };
-    insertMessage(newMessage.text, newMessage.sender, newMessage.timestamp, newMessage.image);
+    insertMessage(
+      newMessage.text,
+      newMessage.sender,
+      newMessage.timestamp,
+      newMessage.image
+    );
     setMessages([...messages, newMessage]);
-    setMessage('');
+    setMessage("");
   };
 
   const pickImage = async () => {
@@ -65,89 +81,131 @@ const ChatDetailScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.messagesContainer}>
-        {messages.map((message) => (
-          <View
-            key={message.id}
-            style={[
-              styles.messageWrapper,
-              message.sender === 'sender' ? styles.senderWrapper : styles.receiverWrapper,
-            ]}
-          >
-            {message.sender === 'receiver' && message.profilePicture && (
-              <Image source={{ uri: message.profilePicture }} style={styles.profilePicture} />
-            )}
+    <ScreenWrapper>
+      <View style={styles.container}>
+        <ScrollView contentContainerStyle={styles.messagesContainer}>
+          {messages.map((message) => (
             <View
+              key={message.id}
               style={[
-                styles.messageContainer,
-                message.sender === 'sender' ? styles.sender : styles.receiver,
+                styles.messageWrapper,
+                message.sender === "sender"
+                  ? styles.senderWrapper
+                  : styles.receiverWrapper,
               ]}
             >
-              {message.image ? (
-                <Image source={{ uri: message.image }} style={styles.messageImage} />
-              ) : (
-                <Text style={styles.text}>{message.text}</Text>
+              {message.sender === "receiver" && message.profilePicture && (
+                <Image
+                  source={{ uri: message.profilePicture }}
+                  style={styles.profilePicture}
+                />
               )}
-              <Text style={styles.timestamp}>{new Date(message.timestamp).toLocaleTimeString()}</Text>
+              <View
+                style={[
+                  styles.messageContainer,
+                  message.sender === "sender" ? styles.sender : styles.receiver,
+                ]}
+              >
+                {message.image ? (
+                  <Image
+                    source={{ uri: message.image }}
+                    style={styles.messageImage}
+                  />
+                ) : (
+                  <Text style={styles.text}>{message.text}</Text>
+                )}
+                <Text style={styles.timestamp}>
+                  {new Date(message.timestamp).toLocaleTimeString()}
+                </Text>
+              </View>
+              {message.sender === "sender" && message.profilePicture && (
+                <Image
+                  source={{ uri: message.profilePicture }}
+                  style={styles.profilePicture}
+                />
+              )}
             </View>
-            {message.sender === 'sender' && message.profilePicture && (
-              <Image source={{ uri: message.profilePicture }} style={styles.profilePicture} />
+          ))}
+        </ScrollView>
+        <View style={styles.inputContainer}>
+          <TouchableOpacity onPress={pickImage}>
+            <Ionicons name="image-outline" size={24} color="black" />
+          </TouchableOpacity>
+          <TextInput
+            style={styles.input}
+            value={message}
+            onChangeText={setMessage}
+            placeholder="Type a message"
+          />
+          <TouchableOpacity onPress={() => sendMessage()}>
+            <Ionicons name="send" size={24} color="black" />
+          </TouchableOpacity>
+        </View>
+        {/* <View style={styles.inputWrapper}>
+          <TextInput
+            placeholder="Type your message here..."
+            value={message}
+            onChangeText={setMessage}
+            style={styles.textInput}
+          />
+          <View style={styles.iconContainer}>
+            <TouchableOpacity style={styles.iconButton}>
+              <AtSign color={"#ff69b4"} size={24} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.iconButton}>
+              <GiftIcon color={"#ff69b4"} size={24} />
+            </TouchableOpacity>
+            {message ? (
+              <TouchableOpacity style={styles.iconButton} onPress={handleSend}>
+                <SendHorizontalIcon color={"#ff69b4"} size={24} />
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => setIsEmojiPickerVisible(true)}
+              >
+                <SmileIcon color={"#ff69b4"} size={24} />
+              </TouchableOpacity>
             )}
           </View>
-        ))}
-      </ScrollView>
-      <View style={styles.inputContainer}>
-        <TouchableOpacity onPress={pickImage}>
-          <Ionicons name="image-outline" size={24} color="black" />
-        </TouchableOpacity>
-        <TextInput
-          style={styles.input}
-          value={message}
-          onChangeText={setMessage}
-          placeholder="Type a message"
-        />
-        <TouchableOpacity onPress={() => sendMessage()}>
-          <Ionicons name="send" size={24} color="black" />
-        </TouchableOpacity>
+        </View> */}
       </View>
-    </View>
+    </ScreenWrapper>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   messagesContainer: {
     flexGrow: 1,
     padding: 20,
   },
   messageWrapper: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
+    flexDirection: "row",
+    alignItems: "flex-end",
     marginVertical: 5,
   },
   senderWrapper: {
-    justifyContent: 'flex-end',
+    justifyContent: "flex-end",
   },
   receiverWrapper: {
-    justifyContent: 'flex-start',
+    justifyContent: "flex-start",
   },
   messageContainer: {
     padding: 10,
     borderRadius: 10,
-    maxWidth: '80%',
+    maxWidth: "80%",
   },
   sender: {
-    backgroundColor: '#DCF8C6', // Light green background for sender
-    alignSelf: 'flex-end',
+    backgroundColor: "#DCF8C6", // Light green background for sender
+    alignSelf: "flex-end",
   },
   receiver: {
-    backgroundColor: '#ECECEC', // Light gray background for receiver
-    alignSelf: 'flex-start',
+    backgroundColor: "#ECECEC", // Light gray background for receiver
+    alignSelf: "flex-start",
   },
   profilePicture: {
     width: 40,
@@ -165,26 +223,25 @@ const styles = StyleSheet.create({
   },
   timestamp: {
     fontSize: 12,
-    color: '#888',
+    color: "#888",
     marginTop: 5,
-    alignSelf: 'flex-end',
+    alignSelf: "flex-end",
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 10,
     borderTopWidth: 1,
-    borderTopColor: '#ddd',
+    borderTopColor: "#ddd",
   },
   input: {
     flex: 1,
-    padding: 10,
+    padding: 4,
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 20,
+    borderColor: "#ddd",
+    borderRadius: 60,
     marginHorizontal: 10,
   },
 });
-
 
 export default ChatDetailScreen;
