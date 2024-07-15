@@ -1,4 +1,4 @@
-import { createStackNavigator } from "@react-navigation/stack";
+import { createStackNavigator,TransitionPresets  } from "@react-navigation/stack";
 import Home from "./../screens/Home";
 import SocialMedia from "./../screens/SocialMedia";
 import Ecommerce from "./../screens/Ecommerce";
@@ -19,6 +19,10 @@ import PlantScanner from "../screens/PlantScanner";
 import { transition } from "../config";
 import ChatDetailScreen from "../screens/ChatDetailScreen";
 import Shops from "../screens/Shops";
+import CustomHeader from "../components/CustomHeader";
+import { slideTransition } from "../const/spring";
+
+
 
 function RootStack() {
   const Stack = createStackNavigator();
@@ -79,18 +83,18 @@ function RootStack() {
         name="ShopsList"
         component={Shops}
         options={transition}
-        // options={{
-        //   headerShown:true,
-        //   headerTitle:"All shops",
-        //   headerMode:"float",
-        // }}
+      // options={{
+      //   headerShown:true,
+      //   headerTitle:"All shops",
+      //   headerMode:"float",
+      // }}
       />
       <Stack.Screen
         name="Chat"
         component={ChatDetailScreen}
         options={{
-          headerShown:true,
-          headerTitle:"Message"
+          headerShown: true,
+          headerTitle: "Message"
         }}
       />
       <Stack.Screen
@@ -163,11 +167,23 @@ function RootStack() {
       />
       <Stack.Screen name="Results"
         component={ResultsScreen}
-        options={transition}
+        options={({ navigation }) => ({
+          header: () => <CustomHeader navigation={navigation} />,
+          ...TransitionPresets.SlideFromRightIOS, 
+          // ...slideTransition,
+
+          headerStyle: {
+            height: 100, 
+          },
+          headerTransparent: true,
+        })}
       />
 
     </Stack.Navigator>
   );
 }
+
+
+
 
 export default RootStack;

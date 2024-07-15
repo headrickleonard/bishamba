@@ -1,127 +1,289 @@
-import {
-  View,
-  Text,
-  SafeAreaView,
-  Image,
-  TouchableOpacity,
-} from "react-native";
 import React, { useEffect, useState } from "react";
 import {
-  heightPercentageToDP as hp,
-  widthPercentageToDP as wp,
-} from "react-native-responsive-screen";
-import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
-import Anticons from "react-native-vector-icons/AntDesign";
+  View,
+  SafeAreaView,
+  Image,
+  Text,
+  StyleSheet,
+  Pressable,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
+import Icon from "react-native-vector-icons/MaterialIcons";
+import COLORS from "../const/colors";
+import ScreenWrapper from "../components/shared/ScreenWrapper";
+import { PRIMARY_COLOR } from "../styles/styles";
+import { getProductById } from "../api";
+import { convertUSDToTZS } from "./../utils/index";
 
-const ProductDetails = ({ route }) => {
-  const data = route?.params?.param;
-  const [emojis, setEmojis] = useState([]);
-
-  const addEmoji = (event) => {
-    const { locationX, locationY } = event.nativeEvent;
-    const newEmoji = { x: locationX, y: locationY, emoji: "😊" };
-    setEmojis([...emojis, newEmoji]);
-  };
+const ProductDetails = ({ navigation, route }) => {
+  const { productId } = route.params;
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [value, setValue] = useState(1);
 
   useEffect(() => {
-    console.log(data);
+    const fetchProductDetails = async () => {
+      try {
+        const response = await getProductById(productId);
+        if (response && response.data) {
+          setProduct(response.data);
+        } else {
+          setError("Product not found");
+        }
+      } catch (error) {
+        console.error("Error fetching product details:", error);
+        setError("Failed to load product details");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProductDetails();
+  }, [productId]);
+
+  useEffect(() => {
+    return () => {
+      console.log("th product id is:", productId);
+    };
   }, []);
 
-  return (
-    <SafeAreaView className="py-12">
-      <View className="">
-        <Animated.Image
-          entering={FadeInDown.duration(300).springify()}
-          source={data.itemIconUrl}
-          className="rounded-xl"
-          style={{ height: hp(40), width: wp(90), marginHorizontal: wp(5) }}
-        />
-        {emojis.map((emoji, index) => (
-          <TouchableOpacity
-            key={index}
-            style={{ position: "absolute", left: emoji.x, top: emoji.y }}
-            onPress={() => console.log("Emoji pressed:", emoji.emoji)}
-          >
-            <Text className="text-5xl">{emoji.emoji}</Text>
-          </TouchableOpacity>
-        ))}
-        <TouchableOpacity
-          onPress={addEmoji}
-          style={{ position: "absolute", bottom: 20, right: 20 }}
-        >
-          {/* <Text>Add Emoji</Text> */}
-        </TouchableOpacity>
+  if (loading) {
+    return (
+      <View style={style.centered}>
+        <ActivityIndicator size="large" color={PRIMARY_COLOR} />
       </View>
-      <View className="flex flex-col items-center justify-evenly">
-        <View
-          className="flex flex-col items-start my-4 rounded-lg border border-slate-300 p-2"
-          style={{ height: hp(45), width: wp(90) }}
-        >
-          <View>
-            <Text className="text-xl font-bold">Techical Name</Text>
+    );
+  }
 
-            <Animated.Text
-              entering={FadeInDown.duration(300).springify()}
-              // style={{ fontSize: hp(3.5) }}
-              className="font-semibold text-neutral-800 tracking-wide"
-            >
-              {/* {data.itemName} */}
-              Emamectin Benzoate 1.5% + Fipronil 3.5% SC
-            </Animated.Text>
+  if (error) {
+    return (
+      <View style={style.centered}>
+        <Text style={style.errorText}>{error}</Text>
+      </View>
+    );
+  }
+
+  if (!product) {
+    return null;
+  }
+
+  return (
+    <ScreenWrapper>
+      <SafeAreaView style={style.safeArea}>
+        <View style={style.header}>
+          <Pressable style={style.iconButton}>
+            <Icon
+              name="arrow-back"
+              size={24}
+              onPress={() => navigation.goBack()}
+            />
+          </Pressable>
+          <Pressable style={style.iconButton}>
+            <Icon name="shopping-cart" size={24} />
+          </Pressable>
+        </View>
+        <View style={style.imageContainer}>
+          <Image
+            source={{ uri: product.images.main }}
+            style={style.productImage}
+          />
+        </View>
+        <View style={style.productDetailsContainer}>
+          <View style={style.brandContainer}>
+            <View style={style.line} />
+            <Text style={style.brandText}>{product.brand}</Text>
           </View>
-          <View>
-            <Text className="text-xl font-bold my-2">Cautions</Text>
-            <Text>
-              1. This insecticide is toxic to fish, uses of this product
-              containing should be avoided near aquaculture.
-            </Text>
-            <Text>
-              2. Do not spray during active bee-foraging period of the day.
-            </Text>
-            <Text>
-              3. Exposure to birds should be avoided as the product is toxic to
-              birds.
-            </Text>
-            {/* <Animated.Text
-              entering={FadeInUp.duration(500).springify()}
-              // style={{ fontSize: hp(4.5) }}
-              className="font-normal text-neutral-800 text-lg break-words"
-            >
-              {data.itemDescription}
-            </Animated.Text> */}
+          <View style={style.productHeader}>
+            <Text style={style.productName}>{product.name}</Text>
+            <View style={style.priceTag}>
+              <Text style={style.priceText}>{convertUSDToTZS(product?.price.toString())} /=</Text>
+            </View>
           </View>
-          <View className="my-2">
-            <Animated.Text
-              entering={FadeInDown.duration(300).springify()}
-              className="font-semibold text-neutral-800 text-xl"
-            >
-              Target Crops
-            </Animated.Text>
-            <Text>
-              Chilli, Cotton, Cumin, Onion, Garlic, vegetable, and horticulture
-              crops
-            </Text>
-          </View>
-          <View className="my-2">
-            <Animated.Text
-             entering={FadeInDown.duration(300).springify()}
-             className="font-semibold text-neutral-800 text-xl"
-            >Target Pests</Animated.Text>
-            <Text>
-              Chilli, Cotton, Cumin, Onion, Garlic, vegetable, and horticulture
-              crops
-            </Text>
+          <View style={style.productDescriptionContainer}>
+            <Text style={style.aboutText}>About</Text>
+            <Text style={style.descriptionText}>{product.description}</Text>
+            <View style={style.actionsContainer}>
+              <View style={style.counter}>
+                <TouchableOpacity
+                  disabled={value <= 1}
+                  onPress={() => setValue(value - 1)}
+                  style={style.counterAction}
+                >
+                  <Text style={style.counterActionText}>-</Text>
+                </TouchableOpacity>
+                <Text style={style.counterValue}>{value}</Text>
+                <TouchableOpacity
+                  onPress={() => setValue(value + 1)}
+                  style={style.counterAction}
+                >
+                  <Text style={style.counterActionText}>+</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={style.buyBtn}>
+                <Text style={style.buyBtnText}>Connect</Text>
+              </View>
+            </View>
           </View>
         </View>
-        <TouchableOpacity
-          className="bg-green-500 rounded-xl flex flex-col items-center justify-center"
-          style={{ height: hp(6), width: wp(90) }}
-        >
-          <Text className="font-bold text-lg text-slate-800">Buy now</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </ScreenWrapper>
   );
 };
-  
+
+const style = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: COLORS.white,
+  },
+  header: {
+    paddingHorizontal: 20,
+    marginTop: 32,
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  iconButton: {
+    backgroundColor: "rgba(128, 128, 128, 0.1)",
+    borderRadius: 50,
+    padding: 8,
+  },
+  imageContainer: {
+    flex: 0.45,
+    marginTop: 20,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  productImage: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "contain",
+    flex: 1,
+  },
+  productDetailsContainer: {
+    flex: 0.55,
+    backgroundColor: COLORS.light,
+    marginHorizontal: 7,
+    marginBottom: 7,
+    borderRadius: 20,
+    marginTop: 30,
+    paddingTop: 30,
+  },
+  brandContainer: {
+    marginLeft: 20,
+    flexDirection: "row",
+    alignItems: "flex-end",
+  },
+  line: {
+    width: 25,
+    height: 2,
+    backgroundColor: COLORS.dark,
+    marginBottom: 5,
+    marginRight: 3,
+  },
+  brandText: {
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  productHeader: {
+    marginLeft: 20,
+    marginTop: 20,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  productName: {
+    fontSize: 22,
+    fontWeight: "bold",
+  },
+  priceTag: {
+    backgroundColor: COLORS.green,
+    width: 120,
+    height: 40,
+    justifyContent: "center",
+    borderTopLeftRadius: 25,
+    borderBottomLeftRadius: 25,
+  },
+  priceText: {
+    marginLeft: 15,
+    color: COLORS.white,
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  productDescriptionContainer: {
+    paddingHorizontal: 20,
+    marginTop: 10,
+  },
+  aboutText: {
+    fontSize: 20,
+    fontWeight: "bold",
+  },
+  descriptionText: {
+    color: "grey",
+    fontSize: 16,
+    lineHeight: 22,
+    marginTop: 10,
+  },
+  actionsContainer: {
+    marginTop: 20,
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  counter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "center",
+    borderWidth: 1,
+    borderColor: PRIMARY_COLOR,
+    borderStyle: "solid",
+    borderRadius: 8,
+    height: 36,
+  },
+  counterAction: {
+    width: 46,
+    height: 34,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  counterActionText: {
+    fontSize: 20,
+    lineHeight: 20,
+    fontWeight: "500",
+    color: "#000",
+  },
+  counterValue: {
+    minWidth: 34,
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#101010",
+    textAlign: "center",
+    paddingHorizontal: 8,
+  },
+  buyBtn: {
+    width: 130,
+    height: 40,
+    backgroundColor: COLORS.green,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 12,
+  },
+  buyBtnText: {
+    color: COLORS.white,
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  centered: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  errorText: {
+    color: "red",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+});
+
 export default ProductDetails;

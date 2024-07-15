@@ -16,7 +16,7 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import COLORS from "../const/colors";
 import ScreenWrapper from "../components/shared/ScreenWrapper";
 import { viewAllCategories, getAllProducts } from "../api";
-
+import HomeLoader from "../components/loaders/HomeLoader";
 const width = Dimensions.get("window").width / 2 - 30;
 
 const HomeScreen = ({ navigation }) => {
@@ -27,12 +27,16 @@ const HomeScreen = ({ navigation }) => {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(true); // State to manage loading
 
   const fetchCategories = async () => {
     try {
       const response = await viewAllCategories();
       if (response && response.status === "success" && response.data) {
-        const categoryNames = ["All", ...response.data.map((item) => item.categoryName)];
+        const categoryNames = [
+          "All",
+          ...response.data.map((item) => item.categoryName),
+        ];
         setCategories(categoryNames);
         console.log("The categories list has:", categoryNames);
       } else {
@@ -54,9 +58,11 @@ const HomeScreen = ({ navigation }) => {
       } else {
         setError("Failed to fetch products");
       }
+      setLoading(false); // Set loading to false after fetching
     } catch (error) {
       console.error("Error fetching products:", error);
       setError("Error fetching products");
+      setLoading(false); // Set loading to false in case of error
     }
   };
 
@@ -76,24 +82,42 @@ const HomeScreen = ({ navigation }) => {
     filterProducts();
   }, [searchQuery, categoryIndex]);
 
+  // const filterProducts = () => {
+  //   let filtered = products;
+
+  //   if (categoryIndex > 0) {
+  //     filtered = filtered.filter(
+  //       (product) => product.category === categories[categoryIndex]
+  //     );
+  //   }
+
+  //   if (searchQuery) {
+  //     filtered = filtered.filter((product) =>
+  //       product.name.toLowerCase().includes(searchQuery.toLowerCase())
+  //     );
+  //   }
+
+  //   setFilteredProducts(filtered);
+  // };
+
+
   const filterProducts = () => {
-    let filtered = products;
-
-    if (categoryIndex > 0) {
-      filtered = filtered.filter(
-        (product) => product.category === categories[categoryIndex]
-      );
+    let filtered = products; // Start with all products
+  
+    if (categoryIndex > 0) { // Check if a specific category is selected (index > 0)
+      const selectedCategory = categories[categoryIndex]; // Get the selected category name
+      filtered = products.filter((product) => product.category === selectedCategory);
     }
-
-    if (searchQuery) {
+  
+    if (searchQuery) { // Apply search query filtering if there is a search query
       filtered = filtered.filter((product) =>
         product.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-
-    setFilteredProducts(filtered);
+  
+    setFilteredProducts(filtered); // Update state with filtered products
   };
-
+  
   const CategoryList = () => {
     return (
       <View style={style.categoryContainer}>
@@ -155,7 +179,12 @@ const HomeScreen = ({ navigation }) => {
           >
             <Image
               source={{ uri: product.images.main }}
-              style={{ width: "100%", height: "100%", resizeMode: "contain", flex: 1 }}
+              style={{
+                width: "100%",
+                height: "100%",
+                resizeMode: "contain",
+                flex: 1,
+              }}
               onError={() => console.log("Error loading image")}
             />
           </View>
@@ -240,23 +269,27 @@ const HomeScreen = ({ navigation }) => {
           </Pressable>
         </View>
         <CategoryList />
-        <FlatList
-          columnWrapperStyle={{ justifyContent: "space-between" }}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{
-            marginTop: 10,
-            paddingBottom: 50,
-          }}
-          numColumns={2}
-          data={filteredProducts}
-          renderItem={({ item }) => {
-            return <Card product={item} />;
-          }}
-          keyExtractor={(item) => item.id.toString()}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-        />
+        {loading ? (
+          <HomeLoader />
+        ) : (
+          <FlatList
+            columnWrapperStyle={{ justifyContent: "space-between" }}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{
+              marginTop: 10,
+              paddingBottom: 50,
+            }}
+            numColumns={2}
+            data={filteredProducts}
+            renderItem={({ item }) => {
+              return <Card product={item} />;
+            }}
+            keyExtractor={(item) => item.id.toString()}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+          />
+        )}
       </SafeAreaView>
     </ScreenWrapper>
   );

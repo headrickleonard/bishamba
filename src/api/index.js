@@ -8,6 +8,7 @@ import { BASE_URL } from '../constants';
  * @param {string} method - The HTTP method (default is 'GET')
  * @param {object} data - The request payload (default is an empty object)
  * @param {object} headers - Additional request headers (default is an empty object)
+ * @param {string} accessToken - optionally pass the access token
  * @returns {Promise<object>} - The response data
  */
 const apiCall = async (url, method = 'GET', data = {}, headers = {}, accessToken = '') => {
@@ -25,7 +26,7 @@ const apiCall = async (url, method = 'GET', data = {}, headers = {}, accessToken
         // console.log("the response from ", url, " is ", response.data[0]);
         return response.data[0];
     } catch (error) {
-        console.error(`Error during ${method} request to ${url}:`, error);
+        console.error(`Error during ${method} request to ${BASE_URL}${url}:`, error);
         throw error;
     }
 };
@@ -171,7 +172,27 @@ export const validateOTP = (phoneNumber, otp) =>
  * Fetch all products along with their associated shop information
  * @returns {Promise<object[]>} - The list of products with shop information
  */
-export const getAllProductsWithShop = () => apiCall('/productsWithShop');
+// export const getAllProductsWithShop = (shopId) => apiCall(`shop-mng/single-shop`, 'POST', { shopId });
+export const getAllProductsWithShop = async (shopId) => {
+    const url = `${BASE_URL}shop-mng/single-shop`;
+    try {
+      const response = await axios.post(url, { shopId });
+      console.log(`API Response for ${url}:`, response.data);
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        console.error(`Error ${error.response.status} during POST request to ${url}:`, error.response.message);
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.error(`No response received from POST request to ${url}:`, error.request);
+      } else {
+        // Something happened in setting up the request that triggered an error
+        console.error(`Error setting up POST request to ${url}:`, error.message);
+      }
+      throw error;
+    }
+  };
 
 /**
  * View all shops owned by a user
@@ -226,5 +247,16 @@ const sendNotificationToShopOwner = async (shop, totalPrice, token) => {
         throw error;
     }
 };
+
+
+export const getProductById = async (productId) => {
+    try {
+      const response = await axios.get(`${BASE_URL}products-mng/single-product/${productId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching product details:', response.error.message);
+      throw error;
+    }
+  };
 
 

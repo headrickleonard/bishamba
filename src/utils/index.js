@@ -70,3 +70,32 @@ export const chemicalsData = [
     name: "product3 name",
   },
 ];
+export function convertUSDToTZS(usdAmount) {
+  if (typeof usdAmount !== 'string') {
+    throw new Error('Input should be a string representing USD amount');
+  }
+
+  // Remove dollar sign if present and convert to number
+  const amount = parseFloat(usdAmount.replace('$', ''));
+
+  if (isNaN(amount)) {
+    throw new Error('Invalid USD amount format');
+  }
+
+  // Conversion rate (example rate)
+  const conversionRate = 2316.75; // 1 USD = 2316.75 TZS (example rate)
+
+  // Perform the conversion
+  const tzsAmount = amount * conversionRate;
+
+  // Format TZS amount as currency without decimals
+  const formattedTZS = tzsAmount.toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'TZS',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  });
+
+  // Return the formatted amount in TZS
+  return formattedTZS;
+}

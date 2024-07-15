@@ -52,12 +52,50 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontSize: 18,
     color: "#6d6d6e",
-    fontFamily: "serif"
   },
   boldText: {
     fontWeight: 'bold',
     fontSize: 20,
     marginLeft: 12,
+  },
+  overviewContainer: {
+    marginVertical: 16,
+    paddingHorizontal: 16,
+  },
+  recommendedContainer: {
+    padding: 16,
+  },
+  recommendedItem: {
+    width: 200,
+    marginRight: 16,
+    marginBottom: 16,
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: "#f8f8f8",
+    shadowColor: "#0078",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 1,
+    margin:1
+  },
+  recommendedImage: {
+    width: "100%",
+    height: 100,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  recommendedName: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 4,
+  },
+  recommendedDescription: {
+    fontSize: 14,
+    color: "#666",
   },
 });
 export default styles;

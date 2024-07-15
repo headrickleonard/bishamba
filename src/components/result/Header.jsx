@@ -40,9 +40,9 @@ const Header = ({ scrollY, photoUri }) => {
         source={{ uri: photoUri }}
         style={styles.image}
       />
-      <TouchableOpacity style={styles.closeIcon} className="bg-black/10">
+      {/* <TouchableOpacity style={styles.closeIcon} className="bg-black/10">
         <XIcon color="white" size={24} />
-      </TouchableOpacity>
+      </TouchableOpacity> */}
       <View style={styles.reactionIcons}>
         <TouchableOpacity
           style={styles.iconButton}
