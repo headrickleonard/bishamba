@@ -15,6 +15,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import OnboardingScreen from './src/screens/OnboardingScreen';
 import { createStackNavigator } from '@react-navigation/stack';
 import { AuthProvider } from './src/contexts/AuthContext';
+import Toast from 'react-native-toast-message';
 
 const Stack = createStackNavigator();
 
@@ -77,6 +78,10 @@ export default function App() {
             {/* <RootNavigation/> */}
           </NavigationContainer>
         </GestureHandlerRootView>
+        <Toast
+          position='top'
+          topOffset={28}
+        />
       </Provider>
     </AuthProvider>
   );

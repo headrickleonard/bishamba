@@ -19,7 +19,7 @@ const apiCall = async (url, method = 'GET', data = {}, headers = {}, accessToken
 
         const response = await axios({
             url: `${BASE_URL}${url}`,
-            method:method,
+            method: method,
             data,
             headers,
         });
@@ -165,9 +165,51 @@ export const sendOTP = (phoneNumber) =>
  * @param {string} otp - The OTP to validate
  * @returns {Promise<object>} - The OTP validation result
  */
-export const validateOTP = (phoneNumber, code) =>
-    apiCall('auth/verify-otp', 'POST', { phoneNumber, code });
+export const validateOTP = async (phoneNumber, code) => {
+    const url = `${BASE_URL}auth/verify-otp`;
+  
+    try {
+      const response = await axios.post(url, {
+        phoneNumber: phoneNumber,
+        code: code,
+      });
+  
+      if (response.status === 201) {
+        console.log("OTP validation successful:", response.data);
+        return response.data; // Return success message 
+      } else {
+        throw new Error("OTP validation failed");
+      }
+    } catch (error) {
+      // Axios errors (e.g., network error, timeout)
+      console.error("Error validating OTP:", error.response.data.message);
+      throw error;
+    }
+  };
 
+  export const sendNotification = async (notificationData, accessToken) => {
+    const apiUrl = `${BASE_URL}notification-mng/create-notification`;
+
+    try {
+        const response = await axios.post(apiUrl, notificationData, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`,
+            },
+        });
+
+        console.log("API Response:", response.data);
+
+        if (response.data.status !== "success") {
+            throw new Error('Failed to send notification');
+        }
+
+        return response.data;
+    } catch (error) {
+        console.error('sendNotification Error:', error.response ? error.response.data : error.message);
+        throw error;
+    }
+};
 /**
  * Fetch all products along with their associated shop information
  * @returns {Promise<object[]>} - The list of products with shop information
@@ -176,23 +218,23 @@ export const validateOTP = (phoneNumber, code) =>
 export const getAllProductsWithShop = async (shopId) => {
     const url = `${BASE_URL}shop-mng/single-shop`;
     try {
-      const response = await axios.post(url, { shopId });
-      console.log(`API Response for ${url}:`, response.data);
-      return response.data;
+        const response = await axios.post(url, { shopId });
+        console.log(`API Response for ${url}:`, response.data);
+        return response.data;
     } catch (error) {
-      if (error.response) {
-        // The request was made and the server responded with a status code
-        console.error(`Error ${error.response.status} during POST request to ${url}:`, error.response.message);
-      } else if (error.request) {
-        // The request was made but no response was received
-        console.error(`No response received from POST request to ${url}:`, error.request);
-      } else {
-        // Something happened in setting up the request that triggered an error
-        console.error(`Error setting up POST request to ${url}:`, error.message);
-      }
-      throw error;
+        if (error.response) {
+            // The request was made and the server responded with a status code
+            console.error(`Error ${error.response.status} during POST request to ${url}:`, error.response.message);
+        } else if (error.request) {
+            // The request was made but no response was received
+            console.error(`No response received from POST request to ${url}:`, error.request);
+        } else {
+            // Something happened in setting up the request that triggered an error
+            console.error(`Error setting up POST request to ${url}:`, error.message);
+        }
+        throw error;
     }
-  };
+};
 
 /**
  * View all shops owned by a user
@@ -249,14 +291,15 @@ const sendNotificationToShopOwner = async (shop, totalPrice, token) => {
 };
 
 
+
 export const getProductById = async (productId) => {
     try {
-      const response = await axios.get(`${BASE_URL}products-mng/single-product/${productId}`);
-      return response.data;
+        const response = await axios.get(`${BASE_URL}products-mng/single-product/${productId}`);
+        return response.data;
     } catch (error) {
-      console.error('Error fetching product details:', response.error.message);
-      throw error;
+        console.error('Error fetching product details:', response.error.message);
+        throw error;
     }
-  };
+};
 
 

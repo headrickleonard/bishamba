@@ -11,7 +11,8 @@ import {
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import FeatherIcon from "react-native-vector-icons/Feather";
-import { registerNewUser, validateOTP } from "../api/index"; 
+import { useAuth } from "../contexts/AuthContext"; // Import useAuth hook
+import { registerNewUser, validateOTP } from "../api/index";
 
 export default function Auth({ navigation, route }) {
   const [form, setForm] = useState({
@@ -23,22 +24,40 @@ export default function Auth({ navigation, route }) {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isOTPSent, setIsOTPSent] = useState(false);
+  const { login } = useAuth();
+
+  const validatePhoneNumber = (phoneNumber) => {
+    const cleanedNumber = phoneNumber.replace(/\D/g, "");
+
+    if (/^0\d{9}$/.test(cleanedNumber)) {
+      return `+255${cleanedNumber.substring(1)}`;
+    }
+
+    if (/^\+255\d{9}$/.test(cleanedNumber)) {
+      return cleanedNumber;
+    }
+
+    return null;
+  };
 
   const handleSignUp = async () => {
     if (!form.email || !form.password || !form.phoneNumber) {
       Alert.alert("Error", "Please fill in all fields");
       return;
     }
+    const formattedPhoneNumber = validatePhoneNumber(form.phoneNumber);
+    if (!formattedPhoneNumber) {
+      Alert.alert("Error", "Please enter a valid phone number");
+      return;
+    }
 
     try {
       setIsLoading(true);
       const { email, password, phoneNumber } = form;
-      const userData = {
-        email,
-        password,
-        phoneNumber,
-      };
+      const userData = { email, password, phoneNumber };
+      // const userData = { email, password, phoneNumber: formattedPhoneNumber };
 
+      // await registerNewUser(userData);
       const response = await registerNewUser(userData);
       Alert.alert(
         "Success",
@@ -53,6 +72,28 @@ export default function Auth({ navigation, route }) {
     }
   };
 
+  // const handleVerifyOTP = async () => {
+  //   if (!form.code) {
+  //     Alert.alert("Error", "Please enter the OTP");
+  //     return;
+  //   }
+
+  //   try {
+  //     setIsLoading(true);
+  //     const { phoneNumber, code } = form;
+  //     const response = await validateOTP(phoneNumber, code);
+  //     // Assuming response contains the access token
+  //     const { accessToken } = response;
+  //     await login(accessToken); // Store the access token using login function
+  //     Alert.alert("Success", "OTP verified successfully.");
+  //     navigation.navigate(route.params.returnScreen);
+  //   } catch (error) {
+  //     Alert.alert("Error", "OTP verification failed. Please try again.");
+  //     console.error("OTP Verification Error:", error);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
   const handleVerifyOTP = async () => {
     if (!form.code) {
       Alert.alert("Error", "Please enter the OTP");
@@ -63,15 +104,20 @@ export default function Auth({ navigation, route }) {
       setIsLoading(true);
       const { phoneNumber, code } = form;
       const response = await validateOTP(phoneNumber, code);
-      Alert.alert("Success", "OTP verified successfully.");
-      navigation.navigate(route.params.returnScreen);
+
+
+      if (response.status==="success") {
+        const { accessToken } = response.data;
+        console.log("the response is...", response.data);
+        await login(accessToken); // Store the access token using login function
+        Alert.alert("Success", "OTP verified successfully.");
+        navigation.goBack();
+      } else {
+        throw new Error(response.message || "Invalid response format");
+      }
     } catch (error) {
-      Alert.alert(
-        "Error",
-        "OTP verification failed. Please try again.",
-        response.error.message
-      );
-      console.error("OTP Verification Error:", error);
+      Alert.alert("Error", "OTP verification failed. Please try again.");
+      console.error("OTP Verification Error:", error.message || error);
     } finally {
       setIsLoading(false);
     }
@@ -79,6 +125,23 @@ export default function Auth({ navigation, route }) {
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
+  };
+
+  const renderPhoneNumberInput = () => {
+    if (isOTPSent) {
+      return (
+        <View style={styles.input}>
+          <Text style={styles.inputLabel}>Phone Number</Text>
+          <TextInput
+            editable={false}
+            placeholder={form.phoneNumber}
+            style={styles.inputControl}
+            value={form.phoneNumber}
+          />
+        </View>
+      );
+    }
+    return null;
   };
 
   return (
@@ -186,31 +249,34 @@ export default function Auth({ navigation, route }) {
                 </TouchableOpacity>
               </>
             ) : (
-              <View style={styles.input}>
-                <Text style={styles.inputLabel}>Enter OTP</Text>
+              <View>
+                {renderPhoneNumberInput()}
+                <View style={styles.input}>
+                  <Text style={styles.inputLabel}>Enter OTP</Text>
 
-                <TextInput
-                  clearButtonMode="while-editing"
-                  onChangeText={(code) => setForm({ ...form, code })}
-                  placeholder="Enter OTP"
-                  placeholderTextColor="#878E9A"
-                  style={styles.inputControl}
-                  keyboardType="number-pad"
-                  value={form.code}
-                />
+                  <TextInput
+                    clearButtonMode="while-editing"
+                    onChangeText={(code) => setForm({ ...form, code })}
+                    placeholder="Enter OTP"
+                    placeholderTextColor="#878E9A"
+                    style={styles.inputControl}
+                    keyboardType="number-pad"
+                    value={form.code}
+                  />
 
-                <TouchableOpacity
-                  onPress={handleVerifyOTP}
-                  disabled={isLoading}
-                >
-                  <View style={styles.btn}>
-                    {isLoading ? (
-                      <ActivityIndicator color="#fff" size="small" />
-                    ) : (
-                      <Text style={styles.btnText}>Verify OTP</Text>
-                    )}
-                  </View>
-                </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={handleVerifyOTP}
+                    disabled={isLoading}
+                  >
+                    <View style={styles.btn}>
+                      {isLoading ? (
+                        <ActivityIndicator color="#fff" size="small" />
+                      ) : (
+                        <Text style={styles.btnText}>Verify OTP</Text>
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                </View>
               </View>
             )}
           </View>

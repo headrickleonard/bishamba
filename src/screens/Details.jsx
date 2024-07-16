@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   SafeAreaView,
@@ -7,33 +7,82 @@ import {
   StyleSheet,
   Pressable,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import COLORS from "../const/colors";
 import ScreenWrapper from "../components/shared/ScreenWrapper";
-import { useAuth } from "../contexts/AuthContext";
 import { PRIMARY_COLOR } from "../styles/styles";
+import { sendNotification } from "../api";
+import { useAuth } from "../contexts/AuthContext";
+import * as Location from "expo-location";
+import Toast from "react-native-toast-message";
 
 const Details = ({ navigation, route }) => {
   const { accessToken } = useAuth();
   const product = route.params;
   const [value, setValue] = React.useState(1);
+  const [location, setLocation] = useState(null);
+  const [errorMsg, setErrorMsg] = useState(null);
 
   const handleConnect = () => {
     if (accessToken) {
-      // User is authenticated, send notification logic goes here
       sendNotificationToShopOwner();
     } else {
-      // User is not authenticated, navigate to registration or login screen
-      navigation.navigate('Auth'); // Replace 'Auth' with your authentication screen name
+      navigation.navigate("Auth", { returnScreen: "Details" });
     }
   };
 
-  const sendNotificationToShopOwner = () => {
-    // Logic to send notification to shop owner
+  const sendNotificationToShopOwner = async () => {
     console.log(`Sending notification about ${product.name} to shop owner`);
-    // Example: API call or other notification mechanism
+    const notificationData = {
+      shopId: product.shopId, // Replace with actual shop ID
+      productId: product.id,
+      quantity: value,
+      totalPrice: product.price * value,
+      userLocation: "New Mbalizi", // Replace with actual user location
+      notificationChannel: "SMS",
+      notificationType: "EXTERNAL",
+      imageUrl: product.images.main,
+    };
+
+    try {
+      const response = await sendNotification(notificationData, accessToken);
+      Toast.show({
+        type: "success",
+        text1: "Notification sent successfully.",
+        text2: "The shop owner will get to you soon",
+      });
+      console.log("Notification sent successfully:", response);
+    } catch (error) {
+      console.error("Error sending notification:", error);
+      Toast.show({
+        type: "Error",
+        text1: "Failed to send notification.",
+        text2: "Please re-try if the issue persists visit our help center",
+      });
+    }
   };
+
+  useEffect(() => {
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        setErrorMsg("Permission to access location was denied");
+        return;
+      }
+
+      let location = await Location.getCurrentPositionAsync({});
+      setLocation(location);
+    })();
+  }, []);
+
+  let text = "Waiting..";
+  if (errorMsg) {
+    text = errorMsg;
+  } else if (location) {
+    text = JSON.stringify(location);
+  }
 
   return (
     <ScreenWrapper>

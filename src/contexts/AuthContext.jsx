@@ -42,12 +42,16 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (accessToken) => {
         try {
+            if (!accessToken) {
+                throw new Error('Access token is null or undefined.');
+            }
             await storeAccessToken(accessToken);
-            // Additional login logic if needed
         } catch (error) {
             console.error('Login error:', error);
+            // Handle error appropriately, e.g., show an error message
         }
     };
+    
 
     const logout = async () => {
         try {
