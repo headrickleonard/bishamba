@@ -26,7 +26,7 @@ const apiCall = async (url, method = 'GET', data = {}, headers = {}, accessToken
         // console.log("the response from ", url, " is ", response.data[0]);
         return response.data[0];
     } catch (error) {
-        console.error(`Error during ${method} request to ${BASE_URL}${url}:`, error);
+        console.error(`Error during ${method} request to ${BASE_URL}${url}:`, response.error);
         throw error;
     }
 };
@@ -141,7 +141,7 @@ export const searchProduct = (query) =>
  * @returns {Promise<object>} - The user's data and token
  */
 export const loginUser = (email, password) =>
-    apiCall('/login', 'POST', { email, password });
+    apiCall('auth/login', 'POST', { email, password });
 
 /**
  * Register a new user
@@ -149,7 +149,7 @@ export const loginUser = (email, password) =>
  * @returns {Promise<object>} - The new user's data
  */
 export const registerNewUser = (userData) =>
-    apiCall('/register', 'POST', userData);
+    apiCall('auth/register', 'POST', userData);
 
 /**
  * Send an OTP to a phone number
@@ -165,8 +165,8 @@ export const sendOTP = (phoneNumber) =>
  * @param {string} otp - The OTP to validate
  * @returns {Promise<object>} - The OTP validation result
  */
-export const validateOTP = (phoneNumber, otp) =>
-    apiCall('/validateOTP', 'POST', { phoneNumber, otp });
+export const validateOTP = (phoneNumber, code) =>
+    apiCall('auth/verify-otp', 'POST', { phoneNumber, code });
 
 /**
  * Fetch all products along with their associated shop information

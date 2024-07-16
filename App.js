@@ -14,6 +14,7 @@ import NoInternetScreen from './src/screens/NoInternetScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import OnboardingScreen from './src/screens/OnboardingScreen';
 import { createStackNavigator } from '@react-navigation/stack';
+import { AuthProvider } from './src/contexts/AuthContext';
 
 const Stack = createStackNavigator();
 
@@ -51,30 +52,32 @@ export default function App() {
   if (isFirstLaunch === null) {
     return null; // Render a loading screen or nothing while checking AsyncStorage
   }
-  
+
   return (
-    <Provider>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <NavigationContainer>
-          <StatusBar
-            style="dark"
-            translucent
-            animated
-            backgroundColor="transparent"
-          />
-           {isFirstLaunch ? (
-            <Stack.Navigator>
-              <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
-              <Stack.Screen name="MainApp" component={BottomTabs} options={{ headerShown: false }} />
-            </Stack.Navigator>
-          ) : (
-            <BottomTabs />
-          )}
-          {/* <BottomTabs /> */}
-          {/* <RootStack /> */}
-          {/* <RootNavigation/> */}
-        </NavigationContainer>
-      </GestureHandlerRootView>
-    </Provider>
+    <AuthProvider>
+      <Provider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <NavigationContainer>
+            <StatusBar
+              style="dark"
+              translucent
+              animated
+              backgroundColor="transparent"
+            />
+            {isFirstLaunch ? (
+              <Stack.Navigator>
+                <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
+                <Stack.Screen name="MainApp" component={BottomTabs} options={{ headerShown: false }} />
+              </Stack.Navigator>
+            ) : (
+              <BottomTabs />
+            )}
+            {/* <BottomTabs /> */}
+            {/* <RootStack /> */}
+            {/* <RootNavigation/> */}
+          </NavigationContainer>
+        </GestureHandlerRootView>
+      </Provider>
+    </AuthProvider>
   );
 }

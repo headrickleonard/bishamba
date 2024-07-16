@@ -11,11 +11,29 @@ import {
 import Icon from "react-native-vector-icons/MaterialIcons";
 import COLORS from "../const/colors";
 import ScreenWrapper from "../components/shared/ScreenWrapper";
+import { useAuth } from "../contexts/AuthContext";
 import { PRIMARY_COLOR } from "../styles/styles";
 
 const Details = ({ navigation, route }) => {
+  const { accessToken } = useAuth();
   const product = route.params;
   const [value, setValue] = React.useState(1);
+
+  const handleConnect = () => {
+    if (accessToken) {
+      // User is authenticated, send notification logic goes here
+      sendNotificationToShopOwner();
+    } else {
+      // User is not authenticated, navigate to registration or login screen
+      navigation.navigate('Auth'); // Replace 'Auth' with your authentication screen name
+    }
+  };
+
+  const sendNotificationToShopOwner = () => {
+    // Logic to send notification to shop owner
+    console.log(`Sending notification about ${product.name} to shop owner`);
+    // Example: API call or other notification mechanism
+  };
 
   return (
     <ScreenWrapper>
@@ -39,10 +57,8 @@ const Details = ({ navigation, route }) => {
         </View>
         <View style={style.imageContainer}>
           <Image
-            source={{uri:product.images.main}}
-            // style={{ resizeMode: "contain", flex: 1 }}
-            style={{ width: "100%", height: "100%", resizeMode: "contain",flex:1 }}
-
+            source={{ uri: product.images.main }}
+            style={{ width: "100%", height: "100%", resizeMode: "contain" }}
           />
         </View>
         <View style={style.detailsContainer}>
@@ -102,7 +118,6 @@ const Details = ({ navigation, route }) => {
                 justifyContent: "space-between",
               }}
             >
-           
               <View style={style.counter}>
                 <TouchableOpacity
                   disabled={value <= 1}
@@ -123,7 +138,7 @@ const Details = ({ navigation, route }) => {
                   <Text style={style.counterActionText}>+</Text>
                 </TouchableOpacity>
               </View>
-              <View style={style.buyBtn}>
+              <TouchableOpacity onPress={handleConnect} style={style.buyBtn}>
                 <Text
                   style={{
                     color: COLORS.white,
@@ -133,7 +148,7 @@ const Details = ({ navigation, route }) => {
                 >
                   Connect
                 </Text>
-              </View>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -172,16 +187,6 @@ const style = StyleSheet.create({
     marginBottom: 5,
     marginRight: 3,
   },
-  borderBtn: {
-    borderColor: "grey",
-    borderWidth: 1,
-    borderRadius: 5,
-    justifyContent: "center",
-    alignItems: "center",
-    width: 60,
-    height: 40,
-  },
-  borderBtnText: { fontWeight: "bold", fontSize: 28 },
   buyBtn: {
     width: 130,
     height: 40,
