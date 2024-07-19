@@ -111,6 +111,7 @@ function RootStack() {
         // component={Index}
         component={Details}
         options={transition}
+      
       />
       <Stack.Screen
         options={{

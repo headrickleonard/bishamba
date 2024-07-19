@@ -55,38 +55,6 @@ export const selectImage = async (setImageUri) => {
 };
 
 /**
- * Upload the selected image to the server
- * @param {string} imageUri - URI of the selected image
- * @param {Function} setUploadedImageUrl - Callback function to set the uploaded image URL
- * @param {Function} detectDisease - Function to call for disease detection
- * @param {Function} setDiseaseResult - Callback function to set the disease result
- */
-export const uploadImage = async (imageUri, setUploadedImageUrl, detectDisease, setDiseaseResult) => {
-    if (!imageUri) return;
-
-    const formData = new FormData();
-    formData.append('image', {
-        uri: imageUri,
-        name: 'plant.jpg',
-        type: 'image/jpeg'
-    });
-
-    try {
-        const uploadResponse = await axios.post(`${BASE_URL}/upload`, formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
-        });
-
-        const imageUrl = uploadResponse.data.imageUrl;
-        setUploadedImageUrl(imageUrl);
-        detectDisease(imageUrl, setDiseaseResult);
-    } catch (error) {
-        console.error('Error uploading image:', error);
-    }
-};
-
-/**
  * Send the image URL to the AI model to detect disease
  * @param {string} imageUrl - URL of the uploaded image
  * @param {Function} setDiseaseResult - Callback function to set the disease result
@@ -167,27 +135,27 @@ export const sendOTP = (phoneNumber) =>
  */
 export const validateOTP = async (phoneNumber, code) => {
     const url = `${BASE_URL}auth/verify-otp`;
-  
-    try {
-      const response = await axios.post(url, {
-        phoneNumber: phoneNumber,
-        code: code,
-      });
-  
-      if (response.status === 201) {
-        console.log("OTP validation successful:", response.data);
-        return response.data; // Return success message 
-      } else {
-        throw new Error("OTP validation failed");
-      }
-    } catch (error) {
-      // Axios errors (e.g., network error, timeout)
-      console.error("Error validating OTP:", error.response.data.message);
-      throw error;
-    }
-  };
 
-  export const sendNotification = async (notificationData, accessToken) => {
+    try {
+        const response = await axios.post(url, {
+            phoneNumber: phoneNumber,
+            code: code,
+        });
+
+        if (response.status === 201) {
+            console.log("OTP validation successful:", response.data);
+            return response.data; // Return success message 
+        } else {
+            throw new Error("OTP validation failed");
+        }
+    } catch (error) {
+        // Axios errors (e.g., network error, timeout)
+        console.error("Error validating OTP:", error.response.data.message);
+        throw error;
+    }
+};
+
+export const sendNotification = async (notificationData, accessToken) => {
     const apiUrl = `${BASE_URL}notification-mng/create-notification`;
 
     try {
@@ -214,7 +182,6 @@ export const validateOTP = async (phoneNumber, code) => {
  * Fetch all products along with their associated shop information
  * @returns {Promise<object[]>} - The list of products with shop information
  */
-// export const getAllProductsWithShop = (shopId) => apiCall(`shop-mng/single-shop`, 'POST', { shopId });
 export const getAllProductsWithShop = async (shopId) => {
     const url = `${BASE_URL}shop-mng/single-shop`;
     try {
@@ -290,16 +257,381 @@ const sendNotificationToShopOwner = async (shop, totalPrice, token) => {
     }
 };
 
+/**
+ * Uploads an image to the server and returns the URL.
+ * @param {Object} image - The image file to upload.
+ * @param {string} image.uri - The URI of the image file.
+ * @param {string} [image.type='image/jpeg'] - The MIME type of the image file.
+ * @param {string} [image.name='image.jpg'] - The name of the image file.
+ * @returns {Promise<string>} A promise that resolves to the URL of the uploaded image.
+ * @throws Will throw an error if the request fails.
+ */
+// export async function uploadImage(image) {
+//     const url = `${BASE_URL}socialMedia-mng/upload`;
+//     const formData = new FormData();
 
+//     formData.append('files', {
+//         uri: image.uri,
+//         // type: image.type || 'image/jpeg',
+//         // name: image.name || 'image.jpg',
+//     });
 
+//     try {
+//         console.log('Uploading ',JSON.stringify(formData),' to:', url);
+
+//         const response
+//             = await axios.post(url, formData, {
+//                 headers: {
+//                     'Content-Type': 'multipart/form-data',
+//                 },
+//             });
+
+//         if (response.data) {
+//             console.log('Image uploaded successfully:', response.data.url);
+
+//             return response.data.url;
+//         } else {
+//             console.error('Failed to get the image URL:', response.data);
+//             throw new Error('Failed to get the image URL');
+//         }
+//     } catch (error) {
+//         console.error('Error uploading image:', error.response ? error.response.data : error.message);
+//         throw error;
+//     }
+// }
+export const uploadImage = async (imagePath) => {
+    const formData = new FormData();
+    formData.append('files', {
+        uri: imagePath,
+        type: imagePath.type || 'image/jpeg',
+        name: imagePath.name || 'image.jpg',
+    });
+
+    const options = {
+        method: 'POST',
+        url: `${BASE_URL}socialMedia-mng/upload`,
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+        data: formData
+    };
+
+    try {
+        const response = await axios.request(options);
+        console.log(response.data.data);
+        return response.data.data;
+    } catch (error) {
+        console.error('Error uploading image:', error.response);
+        throw error;
+    }
+};
+/**
+ * Retrieves product details by product ID.
+ * @param {string} productId - The ID of the product to retrieve.
+ * @returns {Promise<Object>} A promise that resolves to the product details.
+ * @throws Will throw an error if the request fails.
+ */
 export const getProductById = async (productId) => {
     try {
         const response = await axios.get(`${BASE_URL}products-mng/single-product/${productId}`);
         return response.data;
     } catch (error) {
-        console.error('Error fetching product details:', response.error.message);
+        console.error('Error fetching product details:', error.message);
         throw error;
     }
 };
 
+/**
+ * Create a post with content and image URLs.
+ * @param {string} accessToken - The access token for authorization.
+ * @param {string} content - The content of the post.
+ * @param {Array<Object>} images - The list of image objects to be uploaded.
+ * @returns {Promise<Object>} - The response data from the server.
+ */
+export async function createPost(accessToken, content, images) {
+    const url = `${BASE_URL}socialMedia-mng/posts`;
 
+    try {
+        console.log('Uploading images...');
+        const imageUploadPromises = images.map((image) => uploadImage(image.uri));
+        const imageUrls = await Promise.all(imageUploadPromises);
+        console.log('Creating post with content:', content, 'and imageUrls:', imageUrls);
+        console.log('Image URLs:', imageUrls);
+
+
+        const options = {
+            method: 'POST',
+            url: url,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`,
+            },
+            data: {
+                content: content,
+                imageUrls: imageUrls,
+            },
+        };
+
+        const response = await axios.request(options);
+        console.log('Post created successfully:', response.data);
+        return response.data;
+    } catch (error) {
+        console.error('Error creating post::', error.response ? error.response.data : error.message);
+        throw error;
+    }
+}
+
+/**
+ * Fetches all posts from the server.
+ * @returns {Promise<Object[]>} A promise that resolves to an array of post objects.
+ * @throws Will throw an error if the request fails.
+ */
+export async function getAllPosts() {
+    const url = `${BASE_URL}socialMedia-mng/posts`;
+
+    try {
+        const response = await axios.get(url);
+        const responseData = response.data[0];
+
+        if (responseData.status === 'success') {
+            console.log('Posts retrieved successfully:', responseData.data);
+            return responseData.data; // Correctly return the data part
+        } else {
+            console.error('Failed to retrieve posts:', responseData);
+            return responseData; // Return an empty array in case of failure
+        }
+    } catch (error) {
+        console.error('Error retrieving posts:', error.response ? error.response.data : error.message);
+        throw error; // Re-throw error for handling in the calling function
+    }
+}
+
+/**
+ * Votes on a post.
+ * @param {string} accessToken - The access token for authentication.
+ * @param {string} postId - The ID of the post to vote on.
+ * @returns {Promise<Object>} A promise that resolves to the API response data.
+ * @throws Will throw an error if the request fails.
+ */
+export async function voteOnPost(accessToken, postId) {
+    const url = `${BASE_URL}socialMedia-mng/posts/vote`;
+
+    try {
+        const response = await axios.post(
+            url,
+            { postId },
+            {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+        console.log('Voted on post successfully:', response.data);
+        return response.data;
+    } catch (error) {
+        console.error('Error voting on post:', error.response ? error.response.data : error.message);
+        throw error;
+    }
+}
+
+/**
+ * Retrieves all votes on a post.
+ * @param {string} postId - The ID of the post.
+ * @returns {Promise<Object>} A promise that resolves to the API response data.
+ * @throws Will throw an error if the request fails.
+ */
+export async function getAllVotesOnPost(postId) {
+    const url = `${BASE_URL}socialMedia-mng/posts/all-votes/${postId}`;
+
+    try {
+        const response = await axios.get(url);
+        console.log('Votes retrieved successfully:', response.data);
+        return response.data;
+    } catch (error) {
+        console.error('Error retrieving votes on post:', error.response ? error.response.data : error.message);
+        throw error;
+    }
+}
+
+/**
+ * Retrieves all votes on a comment.
+ * @param {string} commentId - The ID of the comment.
+ * @returns {Promise<Object>} A promise that resolves to the API response data.
+ * @throws Will throw an error if the request fails.
+ */
+export async function getAllVotesOnComment(commentId) {
+    const url = `${BASE_URL}socialMedia-mng/comments/all-votes/${commentId}`;
+
+    try {
+        const response = await axios.get(url);
+        console.log('Votes retrieved successfully:', response.data);
+        return response.data;
+    } catch (error) {
+        console.error('Error retrieving votes on comment:', error.response ? error.response.data : error.message);
+        throw error;
+    }
+}
+
+/**
+ * Votes on a comment.
+ * @param {string} accessToken - The access token for authentication.
+ * @param {string} commentId - The ID of the comment to vote on.
+ * @returns {Promise<Object>} A promise that resolves to the API response data.
+ * @throws Will throw an error if the request fails.
+ */
+export async function voteOnComment(accessToken, commentId) {
+    const url = `${BASE_URL}socialMedia-mng/comments/vote`;
+
+    try {
+        const response = await axios.post(
+            url,
+            { commentId },
+            {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+        console.log('Voted on comment successfully:', response.data);
+        return response.data;
+    } catch (error) {
+        console.error('Error voting on comment:', error.response ? error.response.data : error.message);
+        throw error;
+    }
+}
+
+/**
+ * Creates a new comment on a post.
+ * @param {string} accessToken - The access token for authentication.
+ * @param {string} postId - The ID of the post to comment on.
+ * @param {string} content - The content of the comment.
+ * @returns {Promise<Object>} A promise that resolves to the API response data.
+ * @throws Will throw an error if the request fails.
+ */
+export async function createComment(accessToken, postId, content) {
+    const url = `${BASE_URL}socialMedia-mng/comments`;
+
+    try {
+        const response = await axios.post(
+            url,
+            { postId, content },
+            {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+        console.log('Comment created successfully:', response.data);
+        return response.data;
+    } catch (error) {
+        console.error('Error creating comment:', error.response ? error.response.data : error.message);
+        throw error;
+    }
+}
+
+/**
+ * Retrieves all comments for a post.
+ * @param {string} postId - The ID of the post.
+ * @returns {Promise<Object>} A promise that resolves to the API response data.
+ * @throws Will throw an error if the request fails.
+ */
+export async function getCommentsByPost(postId) {
+    const url = `${BASE_URL}socialMedia-mng/post-comments/${postId}`;
+
+    try {
+        const response = await axios.get(url);
+        console.log('Comments retrieved successfully:', response.data);
+        return response.data;
+    } catch (error) {
+        console.error('Error retrieving comments by post:', error.response ? error.response.data : error.message);
+        throw error;
+    }
+}
+
+/**
+ * Deletes a comment.
+ * @param {string} accessToken - The access token for authentication.
+ * @param {string} commentId - The ID of the comment to delete.
+ * @returns {Promise<Object>} A promise that resolves to the API response data.
+ * @throws Will throw an error if the request fails.
+ */
+export async function deleteComment(accessToken, commentId) {
+    const url = `${BASE_URL}socialMedia-mng/comments/delete/${commentId}`;
+
+    try {
+        const response = await axios.delete(url, {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        console.log('Comment deleted successfully:', response.data);
+        return response.data;
+    } catch (error) {
+        console.error('Error deleting comment:', error.response ? error.response.data : error.message);
+        throw error;
+    }
+}
+
+/**
+ * Reports a post.
+ * @param {string} accessToken - The access token for authentication.
+ * @param {string} postId - The ID of the post to report.
+ * @param {string} reason - The reason for reporting the post.
+ * @returns {Promise<Object>} A promise that resolves to the API response data.
+ * @throws Will throw an error if the request fails.
+ */
+export async function reportOnPost(accessToken, postId, reason) {
+    const url = `${BASE_URL}socialMedia-mng/report/report-post`;
+
+    try {
+        const response = await axios.post(
+            url,
+            { reason, postId },
+            {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+        console.log('Post reported successfully:', response.data);
+        return response.data;
+    } catch (error) {
+        console.error('Error reporting post:', error.response ? error.response.data : error.message);
+        throw error;
+    }
+}
+
+/**
+ * Reports a comment.
+ * @param {string} accessToken - The access token for authentication.
+ * @param {string} commentId - The ID of the comment to report.
+ * @param {string} reason - The reason for reporting the comment.
+ * @returns {Promise<Object>} A promise that resolves to the API response data.
+ * @throws Will throw an error if the request fails.
+ */
+export async function reportOnComment(accessToken, commentId, reason) {
+    const url = `${BASE_URL}socialMedia-mng/report/report-comment`;
+
+    try {
+        const response = await axios.post(
+            url,
+            { reason, commentId },
+            {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+        console.log('Comment reported successfully:', response.data);
+        return response.data;
+    } catch (error) {
+        console.error('Error reporting comment:', error.response ? error.response.data : error.message);
+        throw error;
+    }
+}

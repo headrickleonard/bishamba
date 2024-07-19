@@ -36,9 +36,10 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { PRIMARY_COLOR } from "../../../styles/styles";
 import { getRelativeTime } from "../../../utils";
 import COLORS from "./../../../const/colors";
-import EmptyInbox from "../../empty/EmptyInbox";
+import EmptyInbox from './../components/empty/EmptyInbox';
 
-const PostCard = ({ post }) => {
+const PostDetailsScreen = ({ route }) => {
+  const { post } = route.params; // Retrieve the post passed from the previous screen
   const refRBSheet = useRef();
   const [isSheetOpen, setSheetOpen] = useState(false);
   const [message, setMessage] = useState("");
@@ -50,7 +51,6 @@ const PostCard = ({ post }) => {
   const [error, setError] = useState(null);
   const { accessToken, totalTimeSpent, category } = useAuth();
   const [isLiked, setIsLiked] = useState(post.isLiked || false); // State to track if the post is liked
-  const [likeLoading, setLikeLoading] = useState(false); // State to track like request loading
 
   const [imageSource, setImageSource] = useState({
     uri: post.profilePicture,
@@ -115,8 +115,6 @@ const PostCard = ({ post }) => {
   };
 
   const toggleLike = async () => {
-    setLikeLoading(true); // Start loading
-
     try {
       const response = await voteOnPost(accessToken, post.id); // Assuming accessToken is defined
       if (response.status === "success") {
@@ -128,8 +126,6 @@ const PostCard = ({ post }) => {
     } catch (error) {
       console.error("Error toggling like:", error.response.data);
       // Handle network or other errors
-    } finally {
-      setLikeLoading(false); // End loading
     }
   };
 
@@ -199,20 +195,18 @@ const PostCard = ({ post }) => {
             <View style={styles.iconContainer}>
               <Text style={styles.timeText}>{post.votes.length}</Text>
               <TouchableOpacity style={styles.iconButton} onPress={toggleLike}>
-                {likeLoading ? (
-                  <ActivityIndicator size="small" color={COLORS.pink} />
-                ) : isLiked ? (
+                {isLiked ? (
                   <AntDesign name="heart" size={24} color={COLORS.pink} />
                 ) : (
                   <AntDesign name="hearto" size={24} color="pink" />
                 )}
               </TouchableOpacity>
-              {/* <TouchableOpacity style={styles.iconButton}>
+              <TouchableOpacity style={styles.iconButton}>
                 <Share color={PRIMARY_COLOR} size={24} />
               </TouchableOpacity>
               <TouchableOpacity style={styles.iconButton}>
                 <Bookmark color={PRIMARY_COLOR} size={24} />
-              </TouchableOpacity> */}
+              </TouchableOpacity>
             </View>
           </View>
           <TouchableOpacity
@@ -223,7 +217,7 @@ const PostCard = ({ post }) => {
               refRBSheet.current.open();
             }}
           >
-            <Text style={styles.messageButtonText}>Respond</Text>
+            <Text style={styles.messageButtonText}>What's up</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -268,72 +262,36 @@ const PostCard = ({ post }) => {
                 <RefreshControl
                   refreshing={refreshing}
                   onRefresh={onRefresh}
-                  colors={["red", PRIMARY_COLOR, "#0076ff"]}
-                  title="comments"
-                  titleColor={"red"}
-                  role="dialog"
+                  colors={["pink", PRIMARY_COLOR]}
+                  tintColor={"pink"}
                 />
               }
             >
-              {/* {comments.map((comment, index) => (
-                <Text key={index} style={styles.comment}>
-                  {comment.content}
-                </Text>
-              ))} */}
               <FlatList
                 data={comments}
-                renderItem={renderItem}
                 keyExtractor={(item, index) => index.toString()}
+                renderItem={renderItem}
                 ListEmptyComponent={
-                  <EmptyInbox
-                    title={"No comments yet!"}
-                    subtitle={"Be the first to drop a comment here"}
-                  />
+                 <EmptyInbox/>
                 }
               />
             </ScrollView>
-
-            <View style={styles.inputContainer}>
-              <View style={styles.row}>
-                <TouchableOpacity style={styles.profilePicture}>
-                  <Image
-                    source={{ uri: post.profilePicture || DP }}
-                    style={styles.profileImage}
-                  />
-                </TouchableOpacity>
-
-                <View style={styles.inputWrapper}>
-                  <TextInput
-                    placeholder="Type your message here..."
-                    value={message}
-                    onChangeText={setMessage}
-                    style={styles.textInput}
-                  />
-                  <View style={styles.iconContainer}>
-                    <TouchableOpacity style={styles.iconButton}>
-                      <AtSign color={"#ff69b4"} size={24} />
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.iconButton}>
-                      <GiftIcon color={"#ff69b4"} size={24} />
-                    </TouchableOpacity>
-                    {message ? (
-                      <TouchableOpacity
-                        style={styles.iconButton}
-                        onPress={handleSend}
-                      >
-                        <SendHorizontalIcon color={"#ff69b4"} size={24} />
-                      </TouchableOpacity>
-                    ) : (
-                      <TouchableOpacity
-                        style={styles.iconButton}
-                        onPress={() => setIsEmojiPickerVisible(true)}
-                      >
-                        <SmileIcon color={"#ff69b4"} size={24} />
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                </View>
-              </View>
+            <View style={styles.messageInputContainer}>
+              <TextInput
+                style={styles.messageInput}
+                value={message}
+                onChangeText={setMessage}
+                placeholder="Add a comment..."
+                placeholderTextColor="#888"
+                multiline
+              />
+              <TouchableOpacity
+                style={styles.sendButton}
+                activeOpacity={0.8}
+                onPress={handleSend}
+              >
+                <SendHorizontalIcon size={24} color="pink" />
+              </TouchableOpacity>
             </View>
           </KeyboardAvoidingView>
         </RBSheet>
@@ -342,36 +300,29 @@ const PostCard = ({ post }) => {
   );
 };
 
+export default PostDetailsScreen;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
   },
-  header: {
-    padding: 20,
-    backgroundColor: "#f8f8f8",
-    borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
-    marginTop: 12,
-  },
-  headerText: {
-    fontSize: 24,
-    fontWeight: "bold",
+  activityIndicator: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    marginLeft: -15,
+    marginTop: -15,
+    zIndex: 1,
   },
   content: {
-    padding: 20,
-    borderRadius: 12,
-    borderColor: "#d9dbde",
-    borderWidth: 0.5,
-    marginHorizontal: 8,
-    marginTop: 16,
-    marginBottom: 16,
+    padding: 16,
   },
   profileContainer: {
     flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 10,
+    alignItems: "center",
+    marginBottom: 16,
   },
   profileInfo: {
     flexDirection: "row",
@@ -380,178 +331,133 @@ const styles = StyleSheet.create({
   profileImage: {
     width: 40,
     height: 40,
-    borderRadius: 25,
-    marginRight: 4,
+    borderRadius: 20,
+    marginRight: 10,
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#000",
   },
   liveStoryContainer: {
     flexDirection: "row",
     alignItems: "center",
   },
   liveStoryText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#ff69b4",
-    marginLeft: 5,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginLeft: 2,
+    marginLeft: 4,
+    fontSize: 12,
+    color: "#888",
   },
   followButton: {
-    // backgroundColor: PRIMARY_COLOR,
-    paddingVertical: 5,
-    paddingHorizontal: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: PRIMARY_COLOR,
+    backgroundColor: PRIMARY_COLOR,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
   },
   followButtonText: {
-    color: PRIMARY_COLOR,
+    color: "#fff",
     fontWeight: "bold",
   },
   postImage: {
     width: "100%",
     height: 200,
-    marginVertical: 10,
+    borderRadius: 10,
+    marginBottom: 16,
   },
   snippet: {
-    fontSize: 16,
-    marginVertical: 10,
+    fontSize: 14,
+    color: "#444",
+    marginBottom: 16,
   },
   footerContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 10,
+    marginTop: 8,
   },
   timeText: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#888",
   },
   iconContainer: {
     flexDirection: "row",
+    alignItems: "center",
   },
   iconButton: {
-    marginLeft: 15,
+    marginLeft: 10,
   },
   messageButton: {
     backgroundColor: PRIMARY_COLOR,
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 5,
-    marginTop: 10,
+    paddingVertical: 12,
     alignItems: "center",
+    borderRadius: 30,
+    marginTop: 16,
   },
   messageButtonText: {
     color: "#fff",
     fontWeight: "bold",
-  },
-  sheetContent: {
-    flex: 1,
-    justifyContent: "flex-end",
-  },
-  commentsContainer: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
-  comment: {
     fontSize: 16,
-    marginVertical: 5,
-    backgroundColor: "#f1f1f1",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    borderBottomLeftRadius: 24,
-    padding: 8,
-  },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderTopWidth: 1,
-    borderTopColor: "#ccc",
-    padding: 10,
-  },
-  input: {
-    flex: 1,
-    height: 40,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    borderRadius: 5,
-    paddingHorizontal: 10,
-    marginRight: 10,
-  },
-  sendButton: {
-    backgroundColor: "#007bff",
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 5,
-    alignItems: "center",
-  },
-  sendButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "transparent",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  inputWrapper: {
+  sheetContent: {
     flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    borderColor: "#aaa",
-    borderWidth: 1,
-    borderRadius: 16,
-    paddingHorizontal: 8,
-    marginLeft: 8,
   },
-  textInput: {
+  commentsContainer: {
     flex: 1,
-    height: 32,
   },
-  iconContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  iconButton: {
-    marginLeft: 8,
-  },
-  textureOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    opacity: 0.7,
-  },
-  activityIndicator: {
-    position: "absolute",
+  emptyCommentsText: {
+    textAlign: "center",
+    marginTop: 20,
+    color: "#888",
   },
   commentContainer: {
     flexDirection: "row",
-    marginBottom: 10,
-    alignItems: "center",
-  },
-  profileImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
   },
   commentContent: {
-    flex: 1,
     marginLeft: 10,
+    flex: 1,
   },
   commentText: {
-    fontSize: 16,
+    fontSize: 14,
+    color: "#444",
   },
   commentFooter: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
     marginTop: 5,
   },
   likesText: {
-    color: "gray",
+    fontSize: 12,
+    color: "#888",
+  },
+  messageInputContainer: {
+    flexDirection: "row",
+    padding: 10,
+    borderTopWidth: 1,
+    borderTopColor: "#eee",
+    backgroundColor: "#fff",
+  },
+  messageInput: {
+    flex: 1,
+    fontSize: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    backgroundColor: "#f2f2f2",
+    borderRadius: 20,
+    marginRight: 10,
+  },
+  sendButton: {
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 10,
+    borderRadius: 20,
+    backgroundColor: PRIMARY_COLOR,
   },
 });
-
-export default PostCard;

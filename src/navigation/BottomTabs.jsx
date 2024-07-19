@@ -22,7 +22,8 @@ import Shops from "../screens/Shops";
 import { transition } from "../config";
 import SensorAnimation from "../components/Sensema";
 import CircleLoader from "../components/CircleLoader";
-
+import Threads from "../screens/Threads";
+import CustomHeader from "../components/CustomHeader";
 const Tab = createBottomTabNavigator();
 
 const BottomTabs = () => {
@@ -151,15 +152,27 @@ const BottomTabs = () => {
       />
       <Tab.Screen
         name="Shops"
-        component={CircleLoader}
+        // component={CircleLoader}
         // component={TabView}
         // component={SocialFeedScreen}
         // component={ScanHistory}
         // component={ResultsScreen}
         // component={PlantScanner}
         // component={PostCard}
+        component={Threads}
         // component={Shops}
-        options={transition}
+        // options={transition}
+        options={({ navigation }) => ({
+          header: () => <CustomHeader navigation={navigation} title={"Community spaces"} showCreateIcon={true}/>,
+          // ...TransitionPresets.SlideFromRightIOS, 
+          // ...slideTransition,
+
+          headerStyle: {
+            height: 100, 
+          },
+          headerTransparent: true,
+          
+        })}
       />
       <Tab.Screen
         name="Account"

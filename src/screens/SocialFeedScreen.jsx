@@ -1,9 +1,9 @@
-// screens/SocialFeedScreen.js
 import React, { useState } from "react";
-import { View, FlatList, StyleSheet, Button } from "react-native";
+import { View, FlatList, StyleSheet, RefreshControl, TouchableOpacity } from "react-native";
+import { Appbar, Avatar, FAB } from "react-native-paper";
 import PostComponent from "../components/PostComponent";
 import ScreenWrapper from "../components/shared/ScreenWrapper";
-import { Appbar, Avatar } from "react-native-paper";
+import { PRIMARY_COLOR } from "../styles/styles";
 
 const initialPosts = [
   {
@@ -40,14 +40,18 @@ const initialPosts = [
 
 const SocialFeedScreen = ({ navigation }) => {
   const [posts, setPosts] = useState(initialPosts);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    // Simulate fetching new data
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 2000);
+  };
 
   return (
-    // <ScreenWrapper>
-    <View style={styles.container}>
-      {/* <Button
-          title="Create Post"
-          onPress={() => navigation.navigate("CreatePost")}
-        /> */}
+    <ScreenWrapper>
       <Appbar.Header>
         <Appbar.Content title="Social Feed" />
         <Appbar.Action
@@ -64,21 +68,35 @@ const SocialFeedScreen = ({ navigation }) => {
         renderItem={({ item }) => <PostComponent post={item} />}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
-        // showsVerticalScrollIndicator="false"
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        showsVerticalScrollIndicator={false}
       />
-    </View>
-    // {/* </ScreenWrapper> */}
+      <FAB
+        style={styles.fab}
+        small
+        icon="plus"
+        onPress={() => navigation.navigate("CreatePost", {
+          addPost: (newPost) => console.log(newPost),
+        })}
+      />
+    </ScreenWrapper>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
     backgroundColor: "#f2f2f2",
   },
   list: {
     paddingBottom: 60,
+  },
+  fab: {
+    position: "absolute",
+    margin: 16,
+    right: 0,
+    bottom: 60,
+    backgroundColor: PRIMARY_COLOR,
   },
 });
 

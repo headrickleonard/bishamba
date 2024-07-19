@@ -99,3 +99,61 @@ export function convertUSDToTZS(usdAmount) {
   // Return the formatted amount in TZS
   return formattedTZS;
 }
+export function formatTZSCurrency(amount) {
+  if (isNaN(amount)) {
+    return null;
+  }
+
+  // Convert the number to a string with commas as thousand separators
+  return amount.toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'TZS',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  });
+}
+export function getHourAndMinute(timestamp) {
+  const date = new Date(timestamp);
+  const hour = date.getHours().toString().padStart(2, '0');
+  const minute = date.getMinutes().toString().padStart(2, '0');
+  return `${hour}:${minute}`;
+}
+export const formatTime = (milliseconds) => {
+  const seconds = Math.floor((milliseconds / 1000) % 60);
+  const minutes = Math.floor((milliseconds / (1000 * 60)) % 60);
+  const hours = Math.floor((milliseconds / (1000 * 60 * 60)) % 24);
+
+  return `${hours}h ${minutes}m ${seconds}s`;
+};
+export function getRelativeTime(timestamp) {
+  const date = new Date(timestamp);
+  const now = new Date();
+
+  const diffInMilliseconds = now - date;
+  const diffInMinutes = Math.floor(diffInMilliseconds / (1000 * 60));
+  const diffInHours = Math.floor(diffInMilliseconds / (1000 * 60 * 60));
+  const diffInDays = Math.floor(diffInMilliseconds / (1000 * 60 * 60 * 24));
+
+  if (diffInDays === 0) {
+    if (diffInHours > 0) {
+      return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
+    } else if (diffInMinutes > 0) {
+      return `${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''} ago`;
+    } else {
+      return 'Just now';
+    }
+  } else if (diffInDays === 1) {
+    return 'Yesterday';
+  } else if (diffInDays < 7) {
+    return `${diffInDays} days ago`;
+  } else {
+    return 'A long time ago';
+  }
+}
+export const userLevels = [
+  { level: 1, name: "Newbie" },
+  { level: 2, name: "Explorer" },
+  { level: 3, name: "Intermediate" },
+  { level: 4, name: "Advanced" },
+  { level: 5, name: "Expert" },
+];

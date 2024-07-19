@@ -5,7 +5,6 @@ import {
   FlatList,
   StyleSheet,
   SafeAreaView,
-  ActivityIndicator,
   Image,
   Dimensions,
   TextInput,
@@ -13,17 +12,20 @@ import {
 } from "react-native";
 import { getAllProductsWithShop } from "../api";
 import Loader from "../components/loaders/List";
+import { formatTZSCurrency } from "../utils";
+import ScreenWrapper from "../components/shared/ScreenWrapper";
 
 const { width } = Dimensions.get("window");
-const itemWidth = width / 2 - 10; // Adjust margin and padding as needed
+const itemWidth = width / 2 - 20; // Adjust margin and padding as needed
 
-const Shop = ({ route,navigation }) => {
+const Shop = ({ route, navigation }) => {
   const { shopId } = route.params;
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [expandedProductIds, setExpandedProductIds] = useState([]);
 
   const fetchProducts = async (shopId) => {
     try {
@@ -61,25 +63,50 @@ const Shop = ({ route,navigation }) => {
     }
   };
 
-  // Render product item in two-column grid
-  const renderProductItem = ({ item }) => (
-    <TouchableOpacity style={styles.productCard}
-    onPress={() => navigation.navigate('ProductDetails', { productId: item.id })}
+  const toggleDescription = (productId) => {
+    setExpandedProductIds((prevState) =>
+      prevState.includes(productId)
+        ? prevState.filter((id) => id !== productId)
+        : [...prevState, productId]
+    );
+  };
 
-    >
-      <Image source={{ uri: item.images.main }} style={styles.productImage} />
-      <Text style={styles.productName}>{item.name}</Text>
-      <Text style={styles.productPrice}>${item.price.toFixed(2)}</Text>
-      <Text style={styles.productDescription}>{item.description}</Text>
-    </TouchableOpacity>
-  );
+  // Render product item in two-column grid
+  const renderProductItem = ({ item }) => {
+    const isExpanded = expandedProductIds.includes(item.id);
+    const description =
+      item.description.length > 30 && !isExpanded
+        ? `${item.description.slice(0, 30)}...`
+        : item.description;
+
+    return (
+      <TouchableOpacity activeOpacity={0.9}
+        style={styles.productCard}
+        onPress={() =>
+          navigation.navigate("ProductDetails", { productId:  item  })
+          // navigation.navigate("ProductDetails", { productId: item.id })
+        }
+      >
+        <Image source={{ uri: item.images[0] }} style={styles.productImage} />
+        <Text style={styles.productName}>{item.name}</Text>
+        <Text style={styles.productPrice}>{formatTZSCurrency(item.price)}</Text>
+        {/* <Text
+          style={styles.productDescription}
+          onPress={() => toggleDescription(item.id)}
+        >
+          {description}
+        </Text> */}
+      </TouchableOpacity>
+    );
+  };
 
   return (
+    <ScreenWrapper>
     <SafeAreaView style={styles.container}>
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
-          placeholder="Search products..."
+          placeholder={`Search products in this shop...`}
           value={searchQuery}
           onChangeText={handleSearch}
         />
@@ -100,6 +127,7 @@ const Shop = ({ route,navigation }) => {
         />
       )}
     </SafeAreaView>
+    </ScreenWrapper>
   );
 };
 
@@ -128,9 +156,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#f9f9f9",
     borderRadius: 10,
     padding: 10,
-    marginBottom: 10,
+    marginBottom: 20,
     width: itemWidth,
-    marginHorizontal: 4,
+    marginHorizontal: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   productImage: {
     width: "100%",
@@ -143,15 +176,16 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 16,
     marginBottom: 5,
+    color: "#333",
   },
   productPrice: {
-    fontSize: 14,
+    fontSize: 16,
     color: "#888",
     marginBottom: 5,
   },
   productDescription: {
     fontSize: 14,
-    marginBottom: 10,
+    color: "#555",
   },
   errorText: {
     color: "red",

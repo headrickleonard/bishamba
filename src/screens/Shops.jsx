@@ -14,6 +14,8 @@ import Octicons from "react-native-vector-icons/Octicons";
 import { PRIMARY_COLOR } from "../styles/styles";
 import { viewAllShops } from "../api";
 import Loader from "../components/loaders/List";
+import COLORS from "../const/colors";
+import IconMaterial from "react-native-vector-icons/MaterialIcons";
 
 const Shops = ({ navigation }) => {
   const [shopsList, setShopsList] = useState([]);
@@ -40,7 +42,9 @@ const Shops = ({ navigation }) => {
   );
 
   const trimName = (name, maxLength) => {
-    return name.length > maxLength ? name.substring(0, maxLength) + "..." : name;
+    return name.length > maxLength
+      ? name.substring(0, maxLength) + "..."
+      : name;
   };
 
   if (shopsList === null) {
@@ -70,18 +74,24 @@ const Shops = ({ navigation }) => {
         <FlatList
           data={filteredShops}
           keyExtractor={(item) => item.shopId}
-          numColumns={3}
+          numColumns={2}
           renderItem={({ item }) => (
             <View style={styles.shopWrapper}>
               <TouchableOpacity
                 style={styles.shopContainer}
-                onPress={() => navigation.navigate('Shop', { shopId: item.shopId })}
+                onPress={() =>
+                  navigation.navigate("Shop", { shopId: item.shopId })
+                }
               >
                 <View style={styles.imageContainer}>
-                  <Image
-                    source={{ uri: "https://i.pravatar.cc/300" }}
-                    style={styles.profileImage}
-                  />
+                  <View style={styles.profileImageContainer}>
+                    <Image
+                      source={{
+                        uri: "https://cdn-icons-png.flaticon.com/128/3638/3638117.png",
+                      }}
+                      style={styles.profileImage}
+                    />
+                  </View>
                   {item.isVerified && (
                     <Octicons
                       name="verified"
@@ -91,9 +101,15 @@ const Shops = ({ navigation }) => {
                     />
                   )}
                 </View>
-                <Text style={styles.shop}>
-                  {trimName(item.shopName, 10)}
-                </Text>
+                <Text style={styles.shop}>{trimName(item.shopName, 12)}</Text>
+                <View style={styles.badgeContainer}>
+                  <IconMaterial
+                    name="location-on"
+                    size={18}
+                    color={COLORS.yellow}
+                  />
+                  <Text style={styles.badgeText}>{item?.shopLocation}</Text>
+                </View>
               </TouchableOpacity>
             </View>
           )}
@@ -149,6 +165,10 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     margin: 10,
+    backgroundColor: "#edf1fa",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#c8ccc9",
   },
   shopContainer: {
     flex: 1,
@@ -159,10 +179,10 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   profileImage: {
-    width: 80,
-    height: 80,
+    width: 70,
+    height: 70,
     borderRadius: 40,
-    marginBottom: 10,
+    // marginBottom: 10,
   },
   checkmark: {
     position: "absolute",
@@ -172,6 +192,7 @@ const styles = StyleSheet.create({
   shop: {
     fontSize: 16,
     textAlign: "center",
+    fontWeight: "600",
   },
   productsContainer: {
     width: "100%",
@@ -185,6 +206,31 @@ const styles = StyleSheet.create({
   error: {
     color: "red",
     marginTop: 20,
+  },
+  profileImageContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    marginBottom: 10,
+    backgroundColor: "#dedede",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  badgeContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 50,
+    borderWidth: 1,
+    borderColor: COLORS.yellow,
+  },
+  badgeText: {
+    color: COLORS.yellow,
+    marginLeft: 5,
+    fontSize: 12,
   },
 });
 
