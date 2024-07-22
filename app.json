@@ -11,9 +11,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#32c759"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
@@ -25,24 +23,25 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "permissions": [
-        "android.permission.CAMERA"
-      ],
+      "permissions": ["android.permission.CAMERA"],
       "package": "com.headrick.bishamba"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": [
-      "react-native-vision-camera"
-    ],
+    "plugins": ["react-native-vision-camera"],
     "extra": {
       "eas": {
         "projectId": "d9b6cd44-4e32-4099-8fe2-50e417c365e7"
       }
     },
-    "owner": "headrick"
+    "owner": "headrick",
+    "updates": {
+      "fallbackToCacheTimeout": 0, 
+      "checkAutomatically": "ON_LOAD"
+    }
   },
+
   "plugins": [
     [
       "expo-camera",

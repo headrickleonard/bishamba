@@ -24,6 +24,8 @@ import SensorAnimation from "../components/Sensema";
 import CircleLoader from "../components/CircleLoader";
 import Threads from "../screens/Threads";
 import CustomHeader from "../components/CustomHeader";
+import ShutdownIOS from "../components/ShutdownIOS";
+
 const Tab = createBottomTabNavigator();
 
 const BottomTabs = () => {
@@ -160,7 +162,7 @@ const BottomTabs = () => {
         // component={PlantScanner}
         // component={PostCard}
         component={Threads}
-        // component={Shops}
+        // component={ShutdownIOS}
         // options={transition}
         options={({ navigation }) => ({
           header: () => <CustomHeader navigation={navigation} title={"Community spaces"} showCreateIcon={true}/>,
@@ -176,6 +178,7 @@ const BottomTabs = () => {
       />
       <Tab.Screen
         name="Account"
+        // component={ShutdownIOS}
         component={AccountScreen}
         options={{
           headerShown: false,

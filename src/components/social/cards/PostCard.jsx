@@ -1,14 +1,16 @@
 import { AntDesign } from "@expo/vector-icons";
-import { BlurView } from "expo-blur"; // or '@react-native-community/blur'
+import { BlurView } from "expo-blur";
 import {
   AtSign,
-  Bookmark,
-  Earth,
   GiftIcon,
   SendHorizontalIcon,
-  Share,
   SmileIcon,
+  Earth,
+  Speech,
+  MessageCircleDashedIcon,
+  LocateFixedIcon
 } from "lucide-react-native";
+
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -31,6 +33,7 @@ import {
   createComment,
   getCommentsByPost,
   voteOnPost,
+  voteOnComment,
 } from "../../../api/index";
 import { useAuth } from "../../../contexts/AuthContext";
 import { PRIMARY_COLOR } from "../../../styles/styles";
@@ -46,18 +49,16 @@ const PostCard = ({ post }) => {
   const [isEmojiPickerVisible, setIsEmojiPickerVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [profileImage, setProfileImage] = useState(DP);
-  const [loading, setLoading] = useState(true); // State to manage loading
+  const [imageSource, setImageSource] = useState(DP);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { accessToken, totalTimeSpent, category } = useAuth();
-  const [isLiked, setIsLiked] = useState(post.isLiked || false); // State to track if the post is liked
-  const [likeLoading, setLikeLoading] = useState(false); // State to track like request loading
+  const [isLiked, setIsLiked] = useState(post.isLiked || false);
+  const [likeLoading, setLikeLoading] = useState(false);
+  const [likesCount, setLikesCount] = useState(post.votes.length);
 
-  const [imageSource, setImageSource] = useState({
-    uri: post.profilePicture,
-  });
   const DP =
-    "https://plus.unsplash.com/premium_photo-1661508557554-e3d96f2fdde5?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8YmVhdXRpZnVsJTIwZ2lybHxlbnwwfHwwfHx8MA%3D%3D";
-
+    "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?w=740&t=st=1721577394~exp=1721577994~hmac=0dcd162551b0da58abf8cae491250a34fb7091ab2a495548605f17149fecd0a9";
   const handleSend = async () => {
     if (message.trim()) {
       try {
@@ -66,28 +67,36 @@ const PostCard = ({ post }) => {
           post.id,
           message.trim()
         );
-
-        // setComments((prevComments) => [...prevComments, newComment.data.content]);
-        console.log("this is the new comment:", newComment.data.content);
+        // setComments((prevComments) => [
+        //   ...prevComments,
+        //   newComment.data.content,
+        // ]);
         setMessage("");
       } catch (error) {
         console.error("Failed to create comment:", error.message);
-        // Handle error appropriately, e.g., show an error message
       }
     }
   };
 
   const onRefresh = async () => {
     setRefreshing(true);
-
     try {
       const newComments = await getCommentsByPost(post.id);
-
-      const commentsArray = newComments.flatMap((commentGroup) =>
-        commentGroup.data.map((comment) => comment.content)
-      );
+      // const commentsArray = newComments.flatMap((commentGroup) =>
+      //   commentGroup.data.map((comment) => ({
+      //     ...comment.content,
+      //     id: comment.id, // Ensure each comment has an id
+      //     votes: comment.votes || [],
+      //     profilePicture: comment.profilePicture || DP,
+      //   }))
+      // );
+      const commentsArray = newComments.data.map((comment) => ({
+        id: comment.id,
+        content: comment.content,
+        votes: comment.votes || [],
+        profilePicture: comment.profilePicture || DP,
+      }));
       setComments(commentsArray);
-      console.log("the retrieved comments are:", commentsArray);
     } catch (error) {
       console.error("Error refreshing comments:", error.message);
     } finally {
@@ -100,7 +109,7 @@ const PostCard = ({ post }) => {
   };
 
   useEffect(() => {
-    if (imageSource.uri === post.profilePicture) {
+    if (imageSource?.uri === post.profilePicture) {
       setLoading(true);
       setError(false);
     }
@@ -114,22 +123,86 @@ const PostCard = ({ post }) => {
     });
   };
 
+  // const toggleLike = async () => {
+  //   setLikeLoading(true);
+  //   try {
+  //     const response = await voteOnPost(accessToken, post.id);
+  //     if (response.status === "success") {
+  //       setIsLiked(!isLiked);
+  //     } else {
+  //       console.error("Failed to toggle like:", response.message);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error toggling like:", error.response.data);
+  //   } finally {
+  //     setLikeLoading(false);
+  //   }
+  // };
+
   const toggleLike = async () => {
-    setLikeLoading(true); // Start loading
+    setLikeLoading(true);
+
+    // Optimistic update
+    const newIsLiked = !isLiked;
+    const newLikesCount = newIsLiked ? likesCount + 1 : likesCount - 1;
+
+    // Update the local state immediately
+    setLikesCount(newLikesCount);
+    setIsLiked(newIsLiked);
 
     try {
-      const response = await voteOnPost(accessToken, post.id); // Assuming accessToken is defined
+      // Perform the server request
+      const response = await voteOnPost(accessToken, post.id);
+
+      if (response.status !== "success") {
+        throw new Error(response.message);
+      }
+
+      // Update the local state to reflect the new like count
+      // No need to update votes directly as we're only tracking if the post is liked
+    } catch (error) {
+      console.error("Error toggling like:", error.message);
+      // Revert the local state if the server request fails
+      setLikesCount(likesCount);
+      setIsLiked(!newIsLiked);
+    } finally {
+      setLikeLoading(false);
+    }
+  };
+
+  const toggleCommentLike = async (commentId) => {
+    setComments((prevComments) =>
+      prevComments.map((comment) =>
+        comment.id === commentId
+          ? { ...comment, isLiked: !comment.isLiked, likeLoading: true }
+          : comment
+      )
+    );
+    try {
+      const response = await voteOnComment(accessToken, commentId);
       if (response.status === "success") {
-        setIsLiked(!isLiked); // Toggle like state in UI
+        setComments((prevComments) =>
+          prevComments.map((comment) =>
+            comment.id === commentId
+              ? { ...comment, likeLoading: false }
+              : comment
+          )
+        );
       } else {
-        console.error("Failed to toggle like:", response.message);
-        // Handle error state or retry logic if needed
+        console.error(
+          "Failed to toggle like on this comment:",
+          response.message
+        );
       }
     } catch (error) {
-      console.error("Error toggling like:", error.response.data);
-      // Handle network or other errors
-    } finally {
-      setLikeLoading(false); // End loading
+      console.error("Error toggling like on comment:", error.response.data);
+      setComments((prevComments) =>
+        prevComments.map((comment) =>
+          comment.id === commentId
+            ? { ...comment, isLiked: !comment.isLiked, likeLoading: false }
+            : comment
+        )
+      );
     }
   };
 
@@ -144,7 +217,21 @@ const PostCard = ({ post }) => {
       <View style={styles.commentContent}>
         <Text style={styles.commentText}>{item.content}</Text>
         <View style={styles.commentFooter}>
-          <Text style={styles.likesText}>{item.likes} 2 Likes</Text>
+          <Text style={styles.likesText}>{item.votes.length} Likes</Text>
+          <TouchableOpacity
+            className="flex right-2 rounded-full border-2 border-white bg-[#F1F1F1] items-center justify-center p-1 -bottom-2"
+            onPress={() => {
+              toggleCommentLike(item.id);
+            }}
+          >
+            {item.likeLoading ? (
+              <ActivityIndicator size="small" color={COLORS.pink} />
+            ) : item.isLiked ? (
+              <AntDesign name="heart" size={16} color={COLORS.pink} />
+            ) : (
+              <AntDesign name="hearto" size={16} color="pink" />
+            )}
+          </TouchableOpacity>
         </View>
       </View>
     </View>
@@ -165,7 +252,7 @@ const PostCard = ({ post }) => {
                 />
               )}
               <Image
-                source={{ uri: DP }} //user's dp
+                source={{ uri: DP }}
                 style={styles.profileImage}
                 onLoadEnd={handleLoadEnd}
                 onError={handleError}
@@ -175,7 +262,7 @@ const PostCard = ({ post }) => {
                   {post.userName || "Unknown User"}
                 </Text>
                 <View style={styles.liveStoryContainer}>
-                  <Earth color={"pink"} size={12} />
+                  <LocateFixedIcon size={12} color={"#ff69b4"} />
                   <Text style={styles.liveStoryText}>Tanzania</Text>
                 </View>
               </View>
@@ -197,7 +284,7 @@ const PostCard = ({ post }) => {
               Posted {getRelativeTime(post.createdDate) || "some time ago"}
             </Text>
             <View style={styles.iconContainer}>
-              <Text style={styles.timeText}>{post.votes.length}</Text>
+              <Text style={styles.timeText}>{likesCount}</Text>
               <TouchableOpacity style={styles.iconButton} onPress={toggleLike}>
                 {likeLoading ? (
                   <ActivityIndicator size="small" color={COLORS.pink} />
@@ -207,12 +294,6 @@ const PostCard = ({ post }) => {
                   <AntDesign name="hearto" size={24} color="pink" />
                 )}
               </TouchableOpacity>
-              {/* <TouchableOpacity style={styles.iconButton}>
-                <Share color={PRIMARY_COLOR} size={24} />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.iconButton}>
-                <Bookmark color={PRIMARY_COLOR} size={24} />
-              </TouchableOpacity> */}
             </View>
           </View>
           <TouchableOpacity
@@ -223,7 +304,8 @@ const PostCard = ({ post }) => {
               refRBSheet.current.open();
             }}
           >
-            <Text style={styles.messageButtonText}>Respond</Text>
+            <Speech color={"#fff"} size={24} style={{ marginHorizontal: 8 }} />
+            <Text style={styles.messageButtonText}>Join the Fray</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -262,7 +344,7 @@ const PostCard = ({ post }) => {
             style={styles.sheetContent}
             keyboardVerticalOffset={36}
           >
-            <ScrollView
+            {/* <ScrollView
               style={styles.commentsContainer}
               refreshControl={
                 <RefreshControl
@@ -274,24 +356,26 @@ const PostCard = ({ post }) => {
                   role="dialog"
                 />
               }
-            >
-              {/* {comments.map((comment, index) => (
-                <Text key={index} style={styles.comment}>
-                  {comment.content}
-                </Text>
-              ))} */}
-              <FlatList
-                data={comments}
-                renderItem={renderItem}
-                keyExtractor={(item, index) => index.toString()}
-                ListEmptyComponent={
-                  <EmptyInbox
-                    title={"No comments yet!"}
-                    subtitle={"Be the first to drop a comment here"}
-                  />
-                }
-              />
-            </ScrollView>
+            > */}
+            <FlatList
+              data={comments}
+              renderItem={renderItem}
+              keyExtractor={(item) => item.id.toString()}
+              ListEmptyComponent={
+                <EmptyInbox
+                  title={"No comments yet!"}
+                  subtitle={"Be the first to drop a comment here"}
+                />
+              }
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={onRefresh}
+                  colors={["red", PRIMARY_COLOR, "#0076ff"]}
+                />
+              }
+            />
+            {/* </ScrollView> */}
 
             <View style={styles.inputContainer}>
               <View style={styles.row}>
@@ -301,7 +385,6 @@ const PostCard = ({ post }) => {
                     style={styles.profileImage}
                   />
                 </TouchableOpacity>
-
                 <View style={styles.inputWrapper}>
                   <TextInput
                     placeholder="Type your message here..."
@@ -347,17 +430,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
   },
-  header: {
-    padding: 20,
-    backgroundColor: "#f8f8f8",
-    borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
-    marginTop: 12,
-  },
-  headerText: {
-    fontSize: 24,
-    fontWeight: "bold",
-  },
   content: {
     padding: 20,
     borderRadius: 12,
@@ -366,6 +438,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 8,
     marginTop: 16,
     marginBottom: 16,
+    backgroundColor: "#e6e6e6",
   },
   profileContainer: {
     flexDirection: "row",
@@ -399,7 +472,6 @@ const styles = StyleSheet.create({
     marginLeft: 2,
   },
   followButton: {
-    // backgroundColor: PRIMARY_COLOR,
     paddingVertical: 5,
     paddingHorizontal: 8,
     borderRadius: 8,
@@ -414,6 +486,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 200,
     marginVertical: 10,
+    borderRadius: 12,
   },
   snippet: {
     fontSize: 16,
@@ -442,6 +515,10 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginTop: 10,
     alignItems: "center",
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
   messageButtonText: {
     color: "#fff",
@@ -455,45 +532,12 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 20,
   },
-  comment: {
-    fontSize: 16,
-    marginVertical: 5,
-    backgroundColor: "#f1f1f1",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    borderBottomLeftRadius: 24,
-    padding: 8,
-  },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
     borderTopWidth: 1,
     borderTopColor: "#ccc",
     padding: 10,
-  },
-  input: {
-    flex: 1,
-    height: 40,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    borderRadius: 5,
-    paddingHorizontal: 10,
-    marginRight: 10,
-  },
-  sendButton: {
-    backgroundColor: "#007bff",
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 5,
-    alignItems: "center",
-  },
-  sendButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "transparent",
   },
   row: {
     flexDirection: "row",
@@ -520,9 +564,9 @@ const styles = StyleSheet.create({
   iconButton: {
     marginLeft: 8,
   },
-  textureOverlay: {
+  overlay: {
     ...StyleSheet.absoluteFillObject,
-    opacity: 0.7,
+    backgroundColor: "transparent",
   },
   activityIndicator: {
     position: "absolute",
@@ -540,6 +584,13 @@ const styles = StyleSheet.create({
   commentContent: {
     flex: 1,
     marginLeft: 10,
+    backgroundColor: COLORS.light,
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
+    borderBottomLeftRadius: 8,
+    borderBottomRightRadius: 8,
+    paddingLeft: 8,
+    paddingVertical: 4,
   },
   commentText: {
     fontSize: 16,

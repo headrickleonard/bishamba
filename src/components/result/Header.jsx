@@ -28,7 +28,10 @@ const Header = ({ scrollY, photoUri }) => {
   //     outputRange: [1, HEIGHT_FACTOR / (height / 2 + HEIGHT_FACTOR)],
   //     extrapolate: "clamp",
   //   });
-
+  useEffect(() => {
+    console.log("the imageUrl is", photoUri);
+  }, []);
+  
   return (
     <Animated.View
       style={[styles.header, { height: headerHeight }]}

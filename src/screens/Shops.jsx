@@ -78,6 +78,7 @@ const Shops = ({ navigation }) => {
           renderItem={({ item }) => (
             <View style={styles.shopWrapper}>
               <TouchableOpacity
+              activeOpacity={0.8}
                 style={styles.shopContainer}
                 onPress={() =>
                   navigation.navigate("Shop", { shopId: item.shopId })
@@ -87,7 +88,8 @@ const Shops = ({ navigation }) => {
                   <View style={styles.profileImageContainer}>
                     <Image
                       source={{
-                        uri: "https://cdn-icons-png.flaticon.com/128/3638/3638117.png",
+                        uri: item.shopLogo,
+                        // uri: "https://cdn-icons-png.flaticon.com/128/3638/3638117.png",
                       }}
                       style={styles.profileImage}
                     />
@@ -142,6 +144,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     paddingHorizontal: 10,
     marginBottom: 20,
+    width: "100%",
   },
   searchIcon: {
     marginRight: 10,
@@ -156,6 +159,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     paddingVertical: 5,
     paddingHorizontal: 15,
+    marginRight: -6,
   },
   searchButtonText: {
     color: "white",
@@ -183,6 +187,7 @@ const styles = StyleSheet.create({
     height: 70,
     borderRadius: 40,
     // marginBottom: 10,
+    marginTop:2
   },
   checkmark: {
     position: "absolute",

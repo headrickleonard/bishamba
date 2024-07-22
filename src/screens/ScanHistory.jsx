@@ -14,57 +14,19 @@ import {
   createTable,
   insertSearchTerm,
   getSearchHistory,
+  logDiseases,
+  getDiseases, // Added to fetch disease data
 } from "../db/database";
 import HistoryFilterChip from "../components/HistoryFilterChip";
 import { Divider } from "react-native-paper";
 
-const data = [
-  {
-    title: "Thrips",
-    description:
-      "These insects are also known by their scientific name Thysanoptera, and there are about 5,000 species of them. These tiny insects prefer ho...",
-    image: require("../assets/images/plant1.png"),
-  },
-  {
-    title: "Shot Hole Disease",
-    description:
-      "The disease's name couldn't be more evident because it is about the holes. These 'craters' are created by the fungus Wilsonomyces carpo...",
-    image: require("../assets/images/plant2.png"),
-  },
-  {
-    title: "Shield Bugs",
-    description:
-      "This bug is also known as a stink bug, and such a nickname is not coincidental because it does stink when touched or attacked. Its unple...",
-    image: require("../assets/images/plant3.png"),
-  },
-  {
-    title: "Scale insects",
-    description:
-      "Scale insects suck sap from plants, thus depriving them of vital nutrients. They feed on a wide range of indoor and outdoor plants. There...",
-    image: require("../assets/images/plant4.png"),
-  },
-  {
-    title: "Shield Bugs",
-    description:
-      "This bug is also known as a stink bug, and such a nickname is not coincidental because it does stink when touched or attacked. Its unple...",
-    image: require("../assets/images/plant3.png"),
-  },
-  {
-    title: "Scale insects",
-    description:
-      "Scale insects suck sap from plants, thus depriving them of vital nutrients. They feed on a wide range of indoor and outdoor plants. There...",
-    image: require("../assets/images/plant4.png"),
-  },
-];
-
 export default function App() {
   const [search, setSearch] = useState("");
-  const [filteredData, setFilteredData] = useState(data);
+  const [filteredData, setFilteredData] = useState([]);
   const [searchHistory, setSearchHistory] = useState([]);
   const [selectedFilter, setSelectedFilter] = useState("All");
   const [showSearchButton, setShowSearchButton] = useState(true);
   const searchTimeout = useRef(null);
-
   const timeoutRef = useRef(null);
 
   const fetchSearchHistory = () => {
@@ -72,6 +34,13 @@ export default function App() {
       setSearchHistory(history.map((item) => item.term));
     });
   };
+
+  const fetchDiseases = () => {
+    getDiseases((diseases) => {
+      setFilteredData(diseases); // Set the fetched diseases
+    });
+  };
+
   const handleSearch = (text) => {
     setSearch(text);
     if (text.trim() !== "" && !searchHistory.includes(text)) {
@@ -79,6 +48,7 @@ export default function App() {
       setSearchHistory([text, ...searchHistory]);
     }
   };
+
   const handleInputChange = (text) => {
     setSearch(text);
     setShowSearchButton(false);
@@ -93,20 +63,21 @@ export default function App() {
     setSearch("");
     setShowSearchButton(true);
   };
-  const handleClearSearch = () => {
-    setSearch("");
-    setShowSearchButton(true);
-  };
+
   useEffect(() => {
     createTable();
     fetchSearchHistory();
+    return () => {
+      logDiseases();
+      fetchDiseases(); // Fetch diseases on mount
+    };
   }, []);
 
   useEffect(() => {
-    setFilteredData(
-      data.filter(
+    setFilteredData((prevData) =>
+      prevData.filter(
         (item) =>
-          item.title.toLowerCase().includes(search.toLowerCase()) ||
+          item.name.toLowerCase().includes(search.toLowerCase()) ||
           item.description.toLowerCase().includes(search.toLowerCase())
       )
     );
@@ -140,16 +111,8 @@ export default function App() {
             style={styles.searchInput}
             placeholder="Search..."
             value={search}
-            onChangeText={(text) => setSearch(text)}
+            onChangeText={(text) => handleInputChange(text)}
           />
-          {/* <TouchableOpacity
-            onPress={() => {
-              handleSearch(search);
-            }}
-            style={styles.searchButton}
-          >
-            <Text style={styles.searchButtonText}>Search</Text>
-          </TouchableOpacity> */}
           {showSearchButton ? (
             <TouchableOpacity
               onPress={() => handleSearch(search)}
@@ -168,23 +131,6 @@ export default function App() {
         </View>
 
         <Text className="text-xl font-semibold mb-4">Recent searches:</Text>
-        {/* this is the horizontal scrollview for the recent search terms chips */}
-        {/* {searchHistory.length > 0 && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.historyScrollView}
-          >
-            <HistoryFilterChip
-              data={searchHistory}
-              selectedChip={selectedFilter}
-              onSelectChip={(term) => {
-                setSearch(term);
-                setSelectedFilter(term);
-              }}
-            />
-          </ScrollView>
-        )} */}
         {searchHistory.length > 0 ? (
           <ScrollView
             horizontal
@@ -201,16 +147,19 @@ export default function App() {
             />
           </ScrollView>
         ) : (
-          <Text className="text-lg font-semibold text-center">No search history</Text>
+          <Text className="text-lg font-semibold text-center">
+            No search history
+          </Text>
         )}
+
         <Divider />
         {filteredData.length > 0 ? (
           filteredData.map((item, index) => (
             <View key={index} style={styles.card}>
-              <Image source={item.image} style={styles.image} />
+              <Image source={{ uri: item.imageUri }} style={styles.image} />
               <View style={styles.textContainer}>
-                <Text style={styles.title}>{item.title}</Text>
-                <Text style={styles.description}>{item.description}</Text>
+                <Text style={styles.title}>{item.name}</Text>
+                <Text style={styles.description}>{item.symptoms}</Text>
               </View>
             </View>
           ))

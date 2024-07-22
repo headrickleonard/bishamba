@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   Image,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import { Camera } from "expo-camera";
 import { Ionicons } from "@expo/vector-icons";
@@ -16,9 +17,10 @@ import Animated, {
   runOnJS,
 } from "react-native-reanimated";
 import LottieView from "lottie-react-native";
-import WarningAlert from "../components/result/WarningAlert";
 import RBSheet from "react-native-raw-bottom-sheet";
 import PlantsList from "../components/form/PlantsList";
+import { uploadImageForPrediction, makePrediction } from "../api";
+import { insertDisease, getTableSchema, createTable } from "../db/database";
 
 const PlantScanner = ({ route, navigation }) => {
   const [isScanning, setIsScanning] = useState(false);
@@ -28,7 +30,6 @@ const PlantScanner = ({ route, navigation }) => {
   const analyzingOpacity = useSharedValue(0);
   const detectingOpacity = useSharedValue(0);
   const identifyingOpacity = useSharedValue(0);
-  const fadeOutOpacity = useSharedValue(1);
   const [selectedPlant, setSelectedPlant] = useState(null);
   const refRBSheet = useRef();
 
@@ -41,76 +42,102 @@ const PlantScanner = ({ route, navigation }) => {
   const identifyingStyle = useAnimatedStyle(() => ({
     opacity: withTiming(identifyingOpacity.value, { duration: 500 }),
   }));
+
   const [steps, setSteps] = useState({
     analyzing: false,
     detecting: false,
     identifying: false,
   });
+
   useEffect(() => {
     (async () => {
-      const { status } = await Camera.requestPermissionsAsync();
+      const { status } = await Camera.requestCameraPermissionsAsync();
       setHasPermission(status === "granted");
     })();
+    createTable();
   }, []);
-  // useEffect(() => {
-  //   refRBSheet.current.open();
-  // }, []);
-  //   const handleScan = async () => {
-  //     setIsScanning(true);
-  //     setStatus("Analyzing image...");
-  //     setSteps({ analyzing: true, detecting: false, identifying: false });
-
-  //     setTimeout(() => {
-  //       setStatus("Detecting leaves...");
-  //       setSteps({ analyzing: true, detecting: true, identifying: false });
-
-  //       setTimeout(() => {
-  //         setStatus("Identifying plant...");
-  //         setSteps({ analyzing: true, detecting: true, identifying: true });
-
-  //         setTimeout(() => {
-  //           setStatus("Plant identified!");
-  //           setIsScanning(false);
-  //           // Reset steps to initial state after the analysis is complete
-  //           setSteps({ analyzing: false, detecting: false, identifying: false });
-  //         }, 2000);
-  //       }, 2000);
-  //     }, 2000);
-  //   };
 
   const handleScan = async () => {
+    if (!selectedPlant) {
+      refRBSheet.current.open();
+      return;
+    }
+
     setIsScanning(true);
-    setStatus("Analyzing image...");
+    setStatus("Analyzing plant...");
     setSteps({ analyzing: true, detecting: false, identifying: false });
     analyzingOpacity.value = 1;
 
-    setTimeout(() => {
-      setStatus("Detecting leaves...");
-      setSteps({ analyzing: true, detecting: true, identifying: false });
-      detectingOpacity.value = 1;
+    setTimeout(async () => {
+      setStatus("Uploading to server...");
+      analyzingOpacity.value = withTiming(0, { duration: 500 }, () => {
+        detectingOpacity.value = withTiming(1, { duration: 500 });
+      });
 
-      setTimeout(() => {
-        setStatus("Identifying plant...");
-        setSteps({ analyzing: true, detecting: true, identifying: true });
-        identifyingOpacity.value = 1;
+      try {
+        const imageUrl = await uploadImageForPrediction(photoUri);
+        setStatus("Generating report...");
+        const predictionData = await makePrediction(selectedPlant.id, imageUrl);
+        console.log("the prediction results are:", predictionData.data);
+
+        // Uncomment and use this if you want to store disease in local db
+        // insertDisease({
+        //   diseaseId: predictionData.data.diseaseId,
+        //   diseasesCode: predictionData.data.diseasesCode,
+        //   commonName: predictionData.data.commonName,
+        //   scientificName: predictionData.data.scientificName,
+        //   cause: predictionData.data.cause,
+        //   category: predictionData.data.category,
+        //   symptoms: predictionData.data.symptoms,
+        //   comment: predictionData.data.comment,
+        //   management: predictionData.data.management,
+        //   recommendedTreatment: predictionData.data.recommendedTreatment,
+        //   imageUri: imageUrl,
+        // });
 
         setTimeout(() => {
           setStatus("Plant identified!");
-          setIsScanning(false);
-          // Fade out the steps in reverse order
-          identifyingOpacity.value = withTiming(0, { duration: 500 }, () => {
-            detectingOpacity.value = withTiming(0, { duration: 500 }, () => {
-              analyzingOpacity.value = withTiming(0, { duration: 500 }, () => {
-                runOnJS(navigation.navigate)("Results", {
-                  plantName: "Janda Bolong",
-                  plantDetails: "Detailed information about Janda Bolong.",
-                  photoUri,
-                });
+          setSteps({ analyzing: true, detecting: true, identifying: true });
+          detectingOpacity.value = withTiming(0, { duration: 500 }, () => {
+            identifyingOpacity.value = withTiming(1, { duration: 500 });
+          });
+
+          setTimeout(() => {
+            setIsScanning(false);
+            identifyingOpacity.value = withTiming(0, { duration: 500 }, () => {
+              // runOnJS(() => {
+              //   navigation.navigate("Results", {
+              //     plantName: predictionData.plantName,
+              //     plantDetails: predictionData.plantDetails,
+              //     photoUri,
+              //   });
+              // })();
+              runOnJS(navigation.navigate)("Results", {
+                details: {
+                  imageUrl,
+                  data: {
+                    commonName: predictionData.data.commonName,
+                    scientificName: predictionData.data.scientificName,
+                    images: predictionData.data.images,
+                    symptoms: predictionData.data.symptoms,
+                    management: predictionData.data.management,
+                    recommendedTreatment:
+                      predictionData.data.recommendedTreatment,
+                    cause: predictionData.data.cause,
+                  },
+                },
               });
             });
-          });
+          }, 2000);
         }, 2000);
-      }, 2000);
+      } catch (error) {
+        console.error("Error during analysis:", error);
+        setStatus("Error identifying plant. Please try again.");
+        setSteps({ analyzing: false, detecting: false, identifying: false });
+        detectingOpacity.value = withTiming(0, { duration: 500 });
+        identifyingOpacity.value = withTiming(0, { duration: 500 });
+        setIsScanning(false);
+      }
     }, 2000);
   };
 
@@ -130,17 +157,9 @@ const PlantScanner = ({ route, navigation }) => {
     <View style={styles.container}>
       {photoUri && (
         <View style={styles.headerContainer}>
-          {/* <View style={styles.header}>
-            <TouchableOpacity style={styles.headerIcon} activeOpacity={0.8}>
-              <Ionicons name="close" size={24} color={"white"} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.headerIcon} activeOpacity={0.8}>
-              <Ionicons name="information" size={24} color={"white"} />
-            </TouchableOpacity>
-          </View> */}
-          {/* <Text style={styles.statusMessage} className="font-bold">
-            Janda Bolong
-          </Text> */}
+          <Text style={styles.statusMessage} className="font-bold">
+            {selectedPlant ? selectedPlant.name : "No plant selected"}
+          </Text>
           <View style={styles.imageContainer}>
             <Image source={{ uri: photoUri }} style={styles.scannedImage} />
             {isScanning && (
@@ -155,9 +174,7 @@ const PlantScanner = ({ route, navigation }) => {
           <TouchableOpacity
             style={styles.scanButton}
             activeOpacity={0.9}
-            // onPress={()=>{refRBSheet.current.open()}}
             onPress={handleScan}
-            disabled={isScanning}
           >
             {isScanning ? (
               <View style={styles.statusContainer}>
@@ -191,23 +208,7 @@ const PlantScanner = ({ route, navigation }) => {
           <Text style={styles.stepText}>Identifying plant</Text>
         </Animated.View>
       </View>
-      {/* <TouchableOpacity
-        style={styles.scanButton}
-        activeOpacity={0.9}
-        // onPress={()=>{refRBSheet.current.open()}}
-        onPress={handleScan}
-        disabled={isScanning}
-      >
-        {isScanning ? (
-          <View style={styles.statusContainer}>
-            <ActivityIndicator size="small" color="#fff" />
-            <Text style={styles.statusText}>{status}</Text>
-          </View>
-        ) : (
-          <Text style={styles.scanButtonText}>Start Analysis</Text>
-        )}
-      </TouchableOpacity> */}
-      {/* <WarningAlert /> */}
+
       <RBSheet
         ref={refRBSheet}
         height={600}
@@ -239,49 +240,17 @@ const styles = StyleSheet.create({
   headerContainer: {
     padding: 20,
     alignItems: "center",
-    height: 550,
     width: "100%",
-    // backgroundColor: "rgba(0, 0, 0, 0.1)",
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
-    marginTop: 150,
-  },
-  header: {
-    height: 48,
-    width: "100%",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-    marginTop: 24,
-  },
-  headerIcon: {
-    backgroundColor: "rgba(0, 0, 0, 0.3)",
-    borderRadius: 24,
-    height: 48,
-    width: 48,
-    justifyContent: "center",
-    alignItems: "center",
+    marginTop: 120,
   },
   scannedImage: {
     width: "100%",
     height: 300,
-    resizeMode: "cover", //i will use contain later contain
+    resizeMode: "cover",
     marginBottom: 16,
     borderRadius: 24,
-
-    // borderWidth: 4,
-    // borderColor: "#ccc",
-    // borderRadius: 16,
-    // shadowColor: "#000",
-    // shadowOffset: {
-    //   width: 0,
-    //   height: 2,
-    // },
-    // shadowOpacity: 0.25,
-    // shadowRadius: 3.84,
-    // elevation: 5,
-    // overflow: "hidden",
   },
   statusMessage: {
     fontSize: 16,
@@ -305,12 +274,12 @@ const styles = StyleSheet.create({
   scanButton: {
     width: "80%",
     height: 48,
-    backgroundColor: "#32c759", // green-500
+    backgroundColor: "#32c759",
     borderRadius: 12,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginTop:30
+    marginTop: 16,
   },
   scanButtonText: {
     fontSize: 18,
@@ -318,7 +287,7 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   stepsContainer: {
-    marginTop: -60,
+    marginTop: 0,
     paddingHorizontal: 16,
     alignItems: "center",
   },
@@ -338,25 +307,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 16,
   },
-  // imageContainer: {
-  //   width: 320,
-  //   height: 320,
-  //   justifyContent: "center",
-  //   alignItems: "center",
-  //   marginBottom: 16,
-  //   borderWidth: 4,
-  //   borderColor: "#ccc",
-  //   borderRadius: 16,
-  //   shadowColor: "#000",
-  //   shadowOffset: {
-  //     width: 0,
-  //     height: 2,
-  //   },
-  //   shadowOpacity: 0.25,
-  //   shadowRadius: 3.84,
-  //   elevation: 5,
-  //   overflow: "hidden",
-  // },
 });
 
 export default PlantScanner;

@@ -1,11 +1,18 @@
-import React, { useState, useEffect } from "react";
-import { FlatList, StyleSheet, View, RefreshControl } from "react-native";
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  StyleSheet,
+  View,
+  RefreshControl,
+  ActivityIndicator,
+} from "react-native";
+import { FlashList } from "@shopify/flash-list";
 import PostCard from "../components/social/cards/PostCard";
 import ScreenWrapper from "../components/shared/ScreenWrapper";
-import { getAllPosts } from "../api";
+import { getAllPosts } from "../api"; // No getMorePosts function
 import { useAuth } from "../contexts/AuthContext";
-import PostsLoader from "../components/loaders/PostsLoader";
-import GenericPostLoader from './../components/loaders/PostsGenericLoader';
+import GenericPostLoader from "../components/loaders/PostsGenericLoader";
+
+const ITEM_HEIGHT = 150; 
 
 const Threads = () => {
   const { accessToken } = useAuth();
@@ -33,7 +40,6 @@ const Threads = () => {
     try {
       const postsData = await getAllPosts();
       setPosts(postsData);
-      console.log("The fetched posts are:", postsData);
     } catch (error) {
       console.error("Error fetching posts:", error);
     } finally {
@@ -41,12 +47,15 @@ const Threads = () => {
     }
   };
 
+  const renderItem = useCallback(({ item }) => <PostCard post={item} />, []);
+
+  const keyExtractor = useCallback((item) => item.id, []);
+
   if (loading) {
     return (
       <ScreenWrapper>
         <View style={styles.container}>
           <GenericPostLoader />
-          {/* <PostsLoader /> */}
         </View>
       </ScreenWrapper>
     );
@@ -55,11 +64,11 @@ const Threads = () => {
   return (
     <ScreenWrapper>
       <View style={styles.container}>
-        <FlatList
+        <FlashList
           data={posts}
-          renderItem={({ item }) => <PostCard post={item} />}
-          keyExtractor={(item) => item.id}
-          showsVerticalScrollIndicator={false}
+          renderItem={renderItem}
+          keyExtractor={keyExtractor}
+          estimatedItemSize={ITEM_HEIGHT}
           refreshControl={
             <RefreshControl
               refreshing={loading}
@@ -68,6 +77,7 @@ const Threads = () => {
               progressBackgroundColor="#fff"
             />
           }
+          showsVerticalScrollIndicator={false}
         />
       </View>
     </ScreenWrapper>

@@ -108,8 +108,15 @@ export const searchProduct = (query) =>
  * @param {string} password - The user's password
  * @returns {Promise<object>} - The user's data and token
  */
-export const loginUser = (email, password) =>
-    apiCall('auth/login', 'POST', { email, password });
+export const loginUser = async (userData) => {
+    try {
+        const response = await axios.post(`${BASE_URL}auth/login`, userData);
+        return response.data;
+    } catch (error) {
+        console.error("Login API call error:", error);
+        throw error;
+    }
+};
 
 /**
  * Register a new user
@@ -318,8 +325,8 @@ export const uploadImage = async (imagePath) => {
 
     try {
         const response = await axios.request(options);
-        console.log(response.data.data);
-        return response.data.data;
+        console.log(response.data.data[0]);
+        return response.data.data[0];
     } catch (error) {
         console.error('Error uploading image:', error.response);
         throw error;
@@ -356,7 +363,7 @@ export async function createPost(accessToken, content, images) {
         const imageUploadPromises = images.map((image) => uploadImage(image.uri));
         const imageUrls = await Promise.all(imageUploadPromises);
         console.log('Creating post with content:', content, 'and imageUrls:', imageUrls);
-        console.log('Image URLs:', imageUrls);
+        console.log('Image URLs:', imageUrls.length);
 
 
         const options = {
@@ -368,7 +375,7 @@ export async function createPost(accessToken, content, images) {
             },
             data: {
                 content: content,
-                imageUrls: imageUrls,
+                images: imageUrls,
             },
         };
 
@@ -381,6 +388,33 @@ export async function createPost(accessToken, content, images) {
     }
 }
 
+// export async function createPost(accessToken, content, images) {
+//     const url = `${BASE_URL}socialMedia-mng/posts`;
+
+//     try {
+//         console.log('Uploading images...');
+//         const imageUploadPromises = images.map((image) => uploadImage(image.uri));
+//         const imageUrls = await Promise.all(imageUploadPromises);
+
+//         console.log('Creating post with content:', content, 'and imageUrls:', imageUrls);
+
+//         const response = await axios.post(url, {
+//             content: content,
+//             images: imageUrls,
+//         }, {
+//             headers: {
+//                 'Content-Type': 'application/json',
+//                 'Authorization': `Bearer ${accessToken}`,
+//             },
+//         });
+
+//         console.log('Post created successfully:', response.data);
+//         return response.data;
+//     } catch (error) {
+//         console.error('Error creating post:', error.response ? error.response.data : error.message);
+//         throw error;
+//     }
+// }
 /**
  * Fetches all posts from the server.
  * @returns {Promise<Object[]>} A promise that resolves to an array of post objects.
@@ -635,3 +669,79 @@ export async function reportOnComment(accessToken, commentId, reason) {
         throw error;
     }
 }
+
+
+
+// get all plants
+
+export const getAllPlants = async () => {
+    url = `${BASE_URL}plants-mng/all-plants`
+    try {
+        const response = await axios.get(url);
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching plants:', error);
+        throw error;
+    }
+};
+export const uploadImageForPrediction = async (photoUri) => {
+    const url = `${BASE_URL}prediction-mng/upload`;
+    const formData = new FormData();
+    formData.append('file', {
+        uri: photoUri,
+        name: 'photo.jpg',
+        type: 'image/jpeg',
+    });
+
+    const options = {
+        method: 'POST',
+        url: url,
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+        data: formData
+    };
+
+    try {
+        const response = await axios.request(options);
+        return response.data.data
+    } catch (error) {
+        console.error('Error uploading image:', error);
+        throw error;
+    }
+};
+
+export const makePrediction = async (cropId, imageUrl, location) => {
+    const url = `${BASE_URL}prediction-mng/predict`;
+    const payload = {
+        cropId: cropId,
+        image: imageUrl,
+        location: [
+            "-8.9175",
+            "33.4629"
+        ],
+    };
+
+    try {
+        const response = await axios.post(url, payload, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+        return response.data; // Assuming this contains the prediction data
+    } catch (error) {
+        console.error('Error making prediction with payload:', payload, "and the error is:", error.response.data.message);
+        throw error;
+    }
+};
+
+
+export const handleImageUploadAndPredict = async (photoUri) => {
+    try {
+        const imageUrl = await uploadImageForPrediction(photoUri);
+        const predictionData = await makePrediction(imageUrl);
+        return predictionData;
+    } catch (error) {
+        console.error('Error in upload and prediction process:', error);
+    }
+};

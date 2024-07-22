@@ -8,11 +8,13 @@ import {
   TouchableOpacity,
   Switch,
   Image,
+  Linking
 } from "react-native";
 import FeatherIcon from "react-native-vector-icons/Feather";
 import RBSheet from "react-native-raw-bottom-sheet";
 import Login from "../components/form/Login";
 import ScreenWrapper from "../components/shared/ScreenWrapper";
+import * as StoreReview from 'expo-store-review';
 
 export default function Account() {
   const [form, setForm] = useState({
@@ -30,7 +32,29 @@ export default function Account() {
   const openLoginSheet = () => {
     sheet.current.open();
   };
+  const handleContactUs = () => {
+    // You might want to use a mailto link or similar
+    Linking.openURL('mailto:joshuasimon@gmail.com');
+  };
 
+  const handleRateApp = () => {
+    const appStoreURL = "https://play.google.com/store/apps/details?id=com.vastlabs.app&pcampaignid=web_share"; 
+    Linking.openURL(appStoreURL);
+  };
+
+  const requestReview = async () => {
+    try {
+      const isAvailable = await StoreReview.isAvailableAsync();
+      if (isAvailable) {
+        await StoreReview.requestReview();
+      } else {
+        Alert.alert('Rate App', 'Rating feature is not available on this device.');
+      }
+    } catch (error) {
+      console.error('Failed to request review:', error);
+      Alert.alert('Error', 'An error occurred while requesting the review.');
+    }
+  };
   return (
     <ScreenWrapper>
       <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
@@ -181,7 +205,7 @@ export default function Account() {
 
               <TouchableOpacity activeOpacity={0.7} 
                 onPress={() => {
-                  // handle onPress
+                 handleContactUs()
                 }}
                 style={styles.row}
               >
@@ -198,7 +222,8 @@ export default function Account() {
 
               <TouchableOpacity activeOpacity={0.7} 
                 onPress={() => {
-                  // handle onPress
+                  handleRateApp()
+                  // requestReview()
                 }}
                 style={styles.row}
               >

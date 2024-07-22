@@ -12,16 +12,15 @@ import {
   View,
 } from "react-native";
 import BottomSheet from "react-native-raw-bottom-sheet";
-import Carousel from "react-native-reanimated-carousel";
 import { createPost } from "../api/index";
 import { useAuth } from "../contexts/AuthContext";
+import { TouchableRipple } from 'react-native-paper';
 
 const screenWidth = Dimensions.get("window").width;
 
 const PostCanvas = forwardRef((props, ref) => {
   const bottomSheetRef = useRef(null);
   const [selectedMedia, setSelectedMedia] = useState([]);
-  const [content, setContent] = useState("");
   const [description, setDescription] = useState("");
   const { accessToken } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -34,18 +33,27 @@ const PostCanvas = forwardRef((props, ref) => {
 
   const openGallery = async () => {
     try {
+      if (selectedMedia.length >= 2) {
+        alert("You can only select up to 2 images.");
+        return;
+      }
+
       const media = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.All,
         allowsEditing: true,
-        // quality: 1,
-        // selectionLimit:3,
-        // allowsMultipleSelection:true,
-
         presentationStyle: ImagePicker.UIImagePickerPresentationStyle.POPOVER,
       });
 
-      if (!media.canceled && !media.error) {
-        setSelectedMedia((prevMedia) => [...prevMedia, media.assets[0]]);
+      if (!media.canceled && !media.error && media.assets.length > 0) {
+        if (selectedMedia.length + media.assets.length > 1) {
+          alert("You can only select up to 2 images.");
+          return;
+        }
+
+        setSelectedMedia((prevMedia) => [
+          ...prevMedia,
+          ...media.assets.slice(0, 2 - prevMedia.length),
+        ]);
       }
     } catch (error) {
       console.error("Gallery Picker Error:", error);
@@ -62,8 +70,9 @@ const PostCanvas = forwardRef((props, ref) => {
 
   const handleSubmit = async () => {
     setLoading(true);
-    console.log("The content is:", content);
-    console.log("the access token is:", accessToken);
+    console.log("The description is:", description);
+    console.log("The access token is:", accessToken);
+    console.log("seletected media array:", selectedMedia);
     try {
       const response = await createPost(
         accessToken,
@@ -71,10 +80,8 @@ const PostCanvas = forwardRef((props, ref) => {
         selectedMedia
       );
       console.log("Post created successfully:", response);
-      // Close bottom sheet and reset form
       bottomSheetRef.current.close();
       setSelectedMedia([]);
-      setContent("");
       setDescription("");
     } catch (error) {
       console.error("Error creating post:", error.message);
@@ -83,52 +90,20 @@ const PostCanvas = forwardRef((props, ref) => {
     }
   };
 
-  //   const handleSubmit = async () => {
-  //     setLoading(true);
-
-  //     console.log("selected images are:", selectedMedia);
-  //     try {
-  //       console.log("Uploading images...");
-  //       const imageUploadPromises = selectedMedia.map((image) =>
-  //         uploadImage(image.uri)
-  //       );
-  //       const imageUrls = await Promise.all(imageUploadPromises);
-  //       console.log("Images uploaded successfully:", imageUrls);
-
-  //       bottomSheetRef.current.close();
-  //       setSelectedMedia([]);
-  //       setContent("");
-  //       setDescription("");
-  //     } catch (error) {
-  //       console.error("Error uploading images:", error.message);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
   useEffect(() => {
     requestPermissions();
   }, []);
 
-  // Expose the openBottomSheet function through ref forwarding
   React.useImperativeHandle(ref, () => ({
     openBottomSheet: openBottomSheet,
   }));
-
-  const renderCarouselItem = ({ item, index }) => (
-    <Image
-      key={index}
-      source={{ uri: item.uri }}
-      style={styles.carouselImage}
-    />
-  );
 
   return (
     <BottomSheet
       ref={bottomSheetRef}
       closeOnDragDown={true}
       closeOnPressMask={true}
-      height={600}
+      height={500}
       animationType="slide"
       customStyles={{
         wrapper: {
@@ -145,45 +120,37 @@ const PostCanvas = forwardRef((props, ref) => {
         },
       }}
     >
-      <TouchableOpacity onPress={openGallery} style={styles.selectMediaButton}>
-        <Text>Select Media</Text>
-      </TouchableOpacity>
-      {selectedMedia.length > 0 ? (
-        <>
-          <Carousel
-            width={screenWidth - 40}
-            height={200}
-            data={selectedMedia}
-            renderItem={renderCarouselItem}
-            mode="parallax"
-            modeConfig={{
-              parallaxScrollingScale: 0.9,
-              parallaxScrollingOffset: 50,
-            }}
-            panGestureHandlerProps={{
-              activeOffsetX: [-10, 10],
-            }}
+      {/* Image pad for selecting media */}
+      <TouchableRipple onPress={openGallery} style={styles.imagePad}>
+        {selectedMedia.length > 0 ? (
+          <Image
+            source={{ uri: selectedMedia[selectedMedia.length - 1].uri }}
+            style={styles.selectedImage}
           />
-          <TextInput
-            style={styles.input}
-            placeholder="Description"
-            value={description}
-            onChangeText={setDescription}
+        ) : (
+          <Text style={styles.imagePadText}>Tap to select media</Text>
+        )}
+      </TouchableRipple>
+
+      {/* Display selected images */}
+      <View style={styles.imageContainer}>
+        {selectedMedia.map((media, index) => (
+          <Image
+            key={index}
+            source={{ uri: media.uri }}
+            style={styles.selectedImage}
           />
-        </>
-      ) : (
-        <View style={styles.stylishTextContainer}>
-          <TextInput
-            style={styles.stylishText}
-            placeholder="Your text post will appear here"
-            value={content}
-            onChangeText={setContent}
-            multiline
-          />
-        </View>
-      )}
+        ))}
+      </View>
+
+      <TextInput
+        style={styles.input}
+        placeholder="Description"
+        value={description}
+        onChangeText={setDescription}
+      />
       <TouchableOpacity
-        onPress={() => handleSubmit()}
+        onPress={handleSubmit}
         style={[styles.submitButton, loading && styles.disabledButton]}
         disabled={loading}
       >
@@ -198,34 +165,30 @@ const PostCanvas = forwardRef((props, ref) => {
 });
 
 const styles = StyleSheet.create({
-  selectMediaButton: {
-    backgroundColor: "#ccc",
-    padding: 10,
-    borderRadius: 5,
-    marginBottom: 10,
-    alignItems: "center",
-  },
-  selectedImage: {
+  imagePad: {
     width: "100%",
     height: 200,
-    resizeMode: "cover",
+    backgroundColor: "#ddd",
     borderRadius: 10,
-    marginBottom: 10,
-  },
-  stylishTextContainer: {
-    width: "100%",
-    height: 200,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f0f0f0",
-    borderRadius: 10,
     marginBottom: 10,
-    padding: 10,
   },
-  stylishText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#555",
+  imagePadText: {
+    color: "#888",
+    fontSize: 16,
+  },
+  imageContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginBottom: 10,
+  },
+  selectedImage: {
+    width: screenWidth / 3 - 20,
+    height: 100,
+    resizeMode: "cover",
+    borderRadius: 5,
+    margin: 5,
   },
   input: {
     width: "100%",
@@ -247,23 +210,6 @@ const styles = StyleSheet.create({
   submitButtonText: {
     color: "#fff",
     fontWeight: "bold",
-  },
-  closeButton: {
-    backgroundColor: "#f00",
-    padding: 10,
-    borderRadius: 5,
-    alignItems: "center",
-  },
-  closeButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
-  carouselImage: {
-    width: "100%",
-    height: 200,
-    resizeMode: "cover",
-    borderRadius: 10,
-    marginBottom: 10,
   },
 });
 

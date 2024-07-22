@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { AppState } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import AchievementModal from "../components/AchievementModal";
 
 const AuthContext = createContext();
 
@@ -9,9 +10,10 @@ export const AuthProvider = ({ children }) => {
   const [appState, setAppState] = useState(AppState.currentState);
   const [startTime, setStartTime] = useState(null);
   const [totalTimeSpent, setTotalTimeSpent] = useState(0);
+  const [showDialog, setShowDialog] = useState(false);
+  const [currentLevel, setCurrentLevel] = useState("");
 
   useEffect(() => {
-    // Check if access token exists in local storage on app startup
     const fetchAccessToken = async () => {
       try {
         const storedToken = await AsyncStorage.getItem("accessToken");
@@ -53,6 +55,12 @@ export const AuthProvider = ({ children }) => {
         const totalTime = totalTimeSpent + timeSpent;
         setTotalTimeSpent(totalTime);
         await AsyncStorage.setItem("totalTimeSpent", totalTime.toString());
+
+        const currentCategory = getCategory();
+        if (currentCategory !== getCategory(totalTimeSpent)) {
+          setCurrentLevel(currentCategory);
+          setShowDialog(true);
+        }
       }
       setAppState(nextAppState);
     };
@@ -134,6 +142,11 @@ export const AuthProvider = ({ children }) => {
       }}
     >
       {children}
+      <AchievementModal
+        isVisible={showDialog}
+        onClose={() => setShowDialog(false)}
+        level={currentLevel}
+      />
     </AuthContext.Provider>
   );
 };

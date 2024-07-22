@@ -5,10 +5,10 @@ import {
   Image,
   Text,
   StyleSheet,
-  Pressable,
   TouchableOpacity,
   Alert,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import COLORS from "../const/colors";
@@ -19,13 +19,38 @@ import * as Location from "expo-location";
 import Toast from "react-native-toast-message";
 import { formatTZSCurrency } from "../utils/index";
 import Accordion from "../components/accordion/Accordion";
+import Animated, {
+  FadeInLeft,
+  FadeOutUp,
+  FadeOutLeft,
+  FadeInDown,
+} from "react-native-reanimated";
 
 const Details = ({ navigation, route }) => {
-  const { accessToken,logout } = useAuth();
+  const { accessToken, logout } = useAuth();
   const { product } = route.params || {};
   const [value, setValue] = useState(1);
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [status, setStatus] = useState(null);
+
+  const getLocation = async () => {
+    try {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        setErrorMsg("Permission to access location was denied");
+        Alert.alert("Permission Denied", "Please grant location access.");
+        return;
+      }
+
+      let location = await Location.getCurrentPositionAsync({});
+      setLocation(location);
+    } catch (error) {
+      console.error("Error getting location:", error);
+      Alert.alert("Error", "Unable to get current location. Please try again.");
+    }
+  };
 
   const handleConnect = () => {
     if (accessToken) {
@@ -39,6 +64,7 @@ const Details = ({ navigation, route }) => {
   const sendNotificationToShopOwner = async () => {
     if (!location) {
       Alert.alert("Error", "Unable to get current location. Please try again.");
+      await getLocation()
       return;
     }
 
@@ -54,6 +80,8 @@ const Details = ({ navigation, route }) => {
     };
 
     try {
+      setIsLoading(true);
+      setStatus(null);
       const response = await sendNotification(notificationData, accessToken);
       Toast.show({
         type: "success",
@@ -71,26 +99,19 @@ const Details = ({ navigation, route }) => {
         text1: "Failed to send notification.",
         text2: "Please re-try if the issue persists visit our help center",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        setErrorMsg("Permission to access location was denied");
-        return;
-      }
-
-      let location = await Location.getCurrentPositionAsync({});
-      setLocation(location);
-    })();
+    getLocation();
   }, []);
 
   return (
     <ScreenWrapper>
       <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.white }}>
-        <ScrollView contentContainerStyle={{ flexGrow: 1 ,paddingBottom:24}}>
+        <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 24 }}>
           {/* <View style={styles.header}>
             <Pressable style={styles.backButton}>
               <Icon
@@ -119,9 +140,7 @@ const Details = ({ navigation, route }) => {
               </View>
             </View>
             <View style={styles.productNameContainer}>
-              <Text style={styles.productName}>
-                {product?.name}
-              </Text>
+              <Text style={styles.productName}>{product?.name}</Text>
             </View>
             <View style={styles.aboutContainer}>
               {/* <Text style={styles.aboutTitle}>About</Text> */}
@@ -145,8 +164,34 @@ const Details = ({ navigation, route }) => {
                   <Text style={styles.borderBtnText}>+</Text>
                 </TouchableOpacity>
               </View>
-              <TouchableOpacity onPress={handleConnect} style={styles.buyBtn}>
+              {/* <TouchableOpacity onPress={handleConnect} style={styles.buyBtn}>
                 <Text style={styles.buyBtnText}>Connect</Text>
+              </TouchableOpacity> */}
+              <TouchableOpacity onPress={handleConnect} style={styles.buyBtn}>
+                <Animated.View entering={FadeInLeft} exiting={FadeOutUp}>
+                  {isLoading && (
+                    <Animated.View exiting={FadeOutLeft} entering={FadeInDown}>
+                      <ActivityIndicator size={12} color={COLORS.light} />
+                    </Animated.View>
+                  )}
+                  {status === "success" && (
+                    <Animated.View exiting={FadeOutLeft} entering={FadeInDown}>
+                      <Icon
+                        name="check-circle"
+                        size={24}
+                        color={COLORS.green}
+                      />
+                    </Animated.View>
+                  )}
+                  {status === "error" && (
+                    <Animated.View exiting={FadeOutLeft} entering={FadeInDown}>
+                      <Icon name="error" size={24} color={COLORS.red} />
+                    </Animated.View>
+                  )}
+                </Animated.View>
+                <Text style={styles.buyBtnText} disabled={isLoading}>
+                  Connect
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -169,7 +214,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   imageContainer: {
-    height: 300, // Adjust this height as needed
+    height: 300,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -235,7 +280,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom:12
+    marginBottom: 12,
   },
   quantityControls: {
     flexDirection: "row",
@@ -266,6 +311,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 30,
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
   buyBtnText: {
     color: COLORS.white,

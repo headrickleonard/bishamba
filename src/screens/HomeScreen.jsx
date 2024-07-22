@@ -20,6 +20,7 @@ import ScreenWrapper from "../components/shared/ScreenWrapper";
 import COLORS from "../const/colors";
 import { PRIMARY_COLOR } from "../styles/styles";
 import { formatTZSCurrency } from "../utils";
+
 const width = Dimensions.get("window").width / 2 - 30;
 
 const HomeScreen = ({ navigation }) => {
@@ -83,7 +84,7 @@ const HomeScreen = ({ navigation }) => {
 
   useEffect(() => {
     filterProducts();
-  }, [searchQuery, categoryIndex]);
+  }, [searchQuery, categoryIndex, products]);
 
   const filterProducts = () => {
     let filtered = products; // Start with all products
@@ -91,6 +92,7 @@ const HomeScreen = ({ navigation }) => {
     if (categoryIndex > 0) {
       // Check if a specific category is selected (index > 0)
       const selectedCategory = categories[categoryIndex]; // Get the selected category name
+      console.log("Filtering for category:", selectedCategory);
       filtered = products.filter(
         (product) => product.category === selectedCategory
       );
@@ -98,11 +100,13 @@ const HomeScreen = ({ navigation }) => {
 
     if (searchQuery) {
       // Apply search query filtering if there is a search query
+      console.log("Filtering for search query:", searchQuery);
       filtered = filtered.filter((product) =>
         product.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
+    console.log("Filtered products:", filtered);
     setFilteredProducts(filtered); // Update state with filtered products
   };
 
@@ -189,24 +193,6 @@ const HomeScreen = ({ navigation }) => {
       >
         <View style={style.card}>
           <View style={{ alignItems: "flex-end" }}>
-            {/* <View
-              style={{
-                width: 30,
-                height: 30,
-                borderRadius: 20,
-                justifyContent: "center",
-                alignItems: "center",
-                backgroundColor: product?.isInStock
-                  ? "rgba(245, 42, 42,0.2)"
-                  : "rgba(0,0,0,0.2)",
-              }}
-            >
-              <Icon
-                name="favorite"
-                size={18}
-                color={product?.isInStock ? COLORS.red : COLORS.black}
-              />
-            </View> */}
           </View>
 
           {loading && (
@@ -236,21 +222,6 @@ const HomeScreen = ({ navigation }) => {
             <Icon name="star" size={16} color={COLORS.yellow} />
             <Text style={style.ratingText}>{product?.rating}</Text>
           </View>
-          {/* <View style={style.rating}>
-            {[1, 2, 3, 4, 5].map((star) => (
-              <TouchableOpacity
-                key={star}
-                onPress={() => handleRatingPress(star)}
-              >
-                <Icon
-                  name={star <= rating ? "star" : "star-outline"}
-                  size={24}
-                  color={star <= rating ? COLORS.yellow : COLORS.dark}
-                  // color={COLORS.yellow}
-                />
-              </TouchableOpacity>
-            ))}
-          </View> */}
         </View>
       </TouchableOpacity>
     );
@@ -287,7 +258,7 @@ const HomeScreen = ({ navigation }) => {
             />
             <TextInput
               style={styles.searchInput}
-              placeholder="Search agro-vet shops"
+              placeholder="Search agrovet products"
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
@@ -459,6 +430,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     paddingVertical: 5,
     paddingHorizontal: 15,
+    marginRight: -6,
   },
   searchButtonText: {
     color: "white",
