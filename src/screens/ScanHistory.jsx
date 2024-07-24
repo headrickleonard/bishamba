@@ -10,22 +10,19 @@ import {
   TouchableOpacity,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
-import {
-  createTable,
-  insertSearchTerm,
-  getSearchHistory,
-  logDiseases,
-  getDiseases, // Added to fetch disease data
-} from "../db/database";
+import { getSearchHistory, insertSearchTerm } from "../db/database";
 import HistoryFilterChip from "../components/HistoryFilterChip";
 import { Divider } from "react-native-paper";
+import { sendPredictionIds } from "../api/index";
+import { getPlantIds } from "../utils";
 
 export default function App() {
   const [search, setSearch] = useState("");
-  const [filteredData, setFilteredData] = useState([]);
   const [searchHistory, setSearchHistory] = useState([]);
   const [selectedFilter, setSelectedFilter] = useState("All");
   const [showSearchButton, setShowSearchButton] = useState(true);
+  const [diseasePredictions, setDiseasePredictions] = useState([]);
+
   const searchTimeout = useRef(null);
   const timeoutRef = useRef(null);
 
@@ -35,10 +32,18 @@ export default function App() {
     });
   };
 
-  const fetchDiseases = () => {
-    getDiseases((diseases) => {
-      setFilteredData(diseases); // Set the fetched diseases
-    });
+  const fetchPlantIds = async () => {
+    try {
+      const ids = await getPlantIds();
+      const response = sendPredictionIds(ids);
+      setDiseasePredictions(response.data.data);
+      console.log("the ids are:", ids);
+    } catch (error) {
+      console.error(
+        "Error fetching plant IDs or sending prediction IDs:",
+        error
+      );
+    }
   };
 
   const handleSearch = (text) => {
@@ -59,43 +64,27 @@ export default function App() {
     }, 2000);
   };
 
-  const clearSearch = () => {
+  const handleClearSearch = () => {
     setSearch("");
     setShowSearchButton(true);
   };
 
   useEffect(() => {
-    createTable();
     fetchSearchHistory();
-    return () => {
-      logDiseases();
-      fetchDiseases(); // Fetch diseases on mount
-    };
+    fetchPlantIds();
   }, []);
 
-  useEffect(() => {
-    setFilteredData((prevData) =>
-      prevData.filter(
-        (item) =>
-          item.name.toLowerCase().includes(search.toLowerCase()) ||
-          item.description.toLowerCase().includes(search.toLowerCase())
-      )
-    );
-  }, [search]);
-
-  useEffect(() => {
-    if (search) {
-      setShowSearchButton(false);
-      if (searchTimeout.current) {
-        clearTimeout(searchTimeout.current);
-      }
-      searchTimeout.current = setTimeout(() => {
-        setShowSearchButton(true);
-      }, 2000);
-    } else {
-      setShowSearchButton(true);
-    }
-  }, [search]);
+  const renderDiseaseCards = (diseases) => {
+    return diseases.map((disease, index) => (
+      <View key={index} style={styles.card}>
+        <Image source={{ uri: disease.imageUri }} style={styles.image} />
+        <View style={styles.textContainer}>
+          <Text style={styles.title}>{disease.predictionId}</Text>
+          <Text style={styles.description}>{disease.symptoms}</Text>
+        </View>
+      </View>
+    ));
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -111,11 +100,12 @@ export default function App() {
             style={styles.searchInput}
             placeholder="Search..."
             value={search}
-            onChangeText={(text) => handleInputChange(text)}
+            onChangeText={handleInputChange}
           />
           {showSearchButton ? (
             <TouchableOpacity
-              onPress={() => handleSearch(search)}
+              onPress={fetchPlantIds}
+              // onPress={() => handleSearch(search)}
               style={styles.searchButton}
             >
               <Text style={styles.searchButtonText}>Search</Text>
@@ -153,16 +143,9 @@ export default function App() {
         )}
 
         <Divider />
-        {filteredData.length > 0 ? (
-          filteredData.map((item, index) => (
-            <View key={index} style={styles.card}>
-              <Image source={{ uri: item.imageUri }} style={styles.image} />
-              <View style={styles.textContainer}>
-                <Text style={styles.title}>{item.name}</Text>
-                <Text style={styles.description}>{item.symptoms}</Text>
-              </View>
-            </View>
-          ))
+
+        {diseasePredictions.length > 0 ? (
+          renderDiseaseCards(diseasePredictions)
         ) : (
           <Text style={styles.noResultsText} className="font-semibold text-xl">
             No results found for

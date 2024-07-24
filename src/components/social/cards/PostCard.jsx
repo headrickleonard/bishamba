@@ -219,7 +219,7 @@ const PostCard = ({ post }) => {
         <View style={styles.commentFooter}>
           <Text style={styles.likesText}>{item.votes.length} Likes</Text>
           <TouchableOpacity
-            className="flex right-2 rounded-full border-2 border-white bg-[#F1F1F1] items-center justify-center p-1 -bottom-2"
+            className="flex right-4 rounded-full border-2 border-white bg-[#F1F1F1] items-center justify-center p-1 -bottom-2"
             onPress={() => {
               toggleCommentLike(item.id);
             }}

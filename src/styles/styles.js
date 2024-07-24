@@ -84,9 +84,10 @@ const styles = StyleSheet.create({
   },
   recommendedImage: {
     width: "100%",
-    height: 100,
+    height: 120,
     borderRadius: 8,
     marginBottom: 8,
+    objectFit:"fill"
   },
   recommendedName: {
     fontSize: 16,
@@ -96,6 +97,13 @@ const styles = StyleSheet.create({
   recommendedDescription: {
     fontSize: 14,
     color: "#666",
+  },
+  warningCard: {
+    margin: 10,
+    padding: 10,
+    backgroundColor: "#fff5f5",
+    borderColor: "red",
+    borderWidth: 1,
   },
 });
 export default styles;

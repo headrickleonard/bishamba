@@ -1,24 +1,25 @@
-import React from "react";
+import { useNavigation } from "@react-navigation/native";
+import { ScanSearch } from "lucide-react-native";
+import React, { useState ,useEffect} from "react";
 import {
-  View,
-  Text,
-  TouchableOpacity,
+  Image,
   Pressable,
   ScrollView,
-  Image,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { Divider } from "react-native-paper";
-import OverviewItem from "./OverviewItem";
 import styles from "../../styles/styles";
-import { ScanSearch } from "lucide-react-native";
-import { useNavigation } from "@react-navigation/native";
+import OverviewItem from "./OverviewItem";
+import { Card, IconButton } from "react-native-paper";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
 } from "react-native-reanimated";
+
 const PlantDetails = ({ plantDetails }) => {
-  // Destructure the plant details object to get the data
   const {
     commonName,
     scientificName,
@@ -40,7 +41,7 @@ const PlantDetails = ({ plantDetails }) => {
       iconName: "alert-triangle",
       iconColor: "yellow",
       title: "Effects:",
-      description: cause, // or another appropriate field from plantDetails
+      description: cause,
     },
     {
       iconName: "shield",
@@ -49,19 +50,52 @@ const PlantDetails = ({ plantDetails }) => {
       description: management,
     },
   ];
+
+  const navigation = useNavigation();
+
   const handleImagePress = (image, index) => {
     navigation.navigate("ImageViewer", { image, images });
   };
-  const relatedImages = images;
-  const navigation = useNavigation();
+
+  const trimDescription = (description) => {
+    const firstPeriodIndex = description.indexOf(".");
+    if (firstPeriodIndex === -1) return description;
+    return description.substring(0, firstPeriodIndex + 1);
+  };
+
   const recommendedItems = recommendedTreatment.map((item) => ({
-    name: item.name,
-    description: item.description,
-    imageUri: item.imageUri,
+    name: item.productName,
+    fullDescription: item.description,
+    shortDescription: trimDescription(item.description),
+    imageUri: item.images[0],
+
   }));
 
+
+  const toggleDescription = (index) => {
+    if (expandedIndexes.includes(index)) {
+      setExpandedIndexes(expandedIndexes.filter((i) => i !== index));
+    } else {
+      setExpandedIndexes([...expandedIndexes, index]);
+    }
+  };
+  const [expandedIndexes, setExpandedIndexes] = useState([]);
+  const [showWarning, setShowWarning] = useState(true);
+  
+  const warningOpacity = useSharedValue(0);
+
+  useEffect(() => {
+    warningOpacity.value = withTiming(showWarning ? 1 : 0, { duration: 500 });
+  }, [showWarning]);
+
+  const animatedWarningStyle = useAnimatedStyle(() => {
+    return {
+      opacity: warningOpacity.value,
+    };
+  });
   return (
     <View>
+    
       <View className="my-4 flex flex-col px-4">
         <Text className="font-extrabold text-2xl mt-4 text-start">
           {commonName}
@@ -120,24 +154,46 @@ const PlantDetails = ({ plantDetails }) => {
       <View className="flex flex-row items-center justify-start px-4">
         <Text className="font-bold text-xl mt-4">Recommended Treatments</Text>
       </View>
+      {showWarning && (
+        <Animated.View style={[styles.warningContainer, animatedWarningStyle]}>
+          <Card style={styles.warningCard}>
+            <Card.Title
+              title="Warning"
+              subtitle="Please be careful when using the recommended products/treatments."
+              left={(props) => <IconButton {...props} icon="alert" color="red" />}
+              right={(props) => (
+                <IconButton {...props} icon="close" onPress={() => setShowWarning(false)} />
+              )}
+            />
+          </Card>
+        </Animated.View>
+      )}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         style={styles.recommendedContainer}
       >
-        {recommendedItems.map((item, index) => (
-          <View key={index} style={styles.recommendedItem}>
-            <Image
-              source={{ uri: item.imageUri }}
-              style={styles.recommendedImage}
-            />
-            <Text style={styles.recommendedName}>{item.name}</Text>
-            <Text style={styles.recommendedDescription}>
-              {item.description}
-            </Text>
-          </View>
-        ))}
+        {recommendedItems.map((item, index) => {
+          const isExpanded = expandedIndexes.includes(index);
+          return (
+            <View key={index} style={styles.recommendedItem}>
+              <Image
+                source={{ uri: item.imageUri }}
+                style={styles.recommendedImage}
+              />
+              <Text style={styles.recommendedName}>{item.name}</Text>
+              {/* <Text
+                style={styles.recommendedDescription}
+                onPress={() => toggleDescription(index)}
+              >
+                {isExpanded ? item.fullDescription : item.shortDescription}
+                {!isExpanded && " ..."}
+              </Text> */}
+            </View>
+          );
+        })}
       </ScrollView>
+      
     </View>
   );
 };

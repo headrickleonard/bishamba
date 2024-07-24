@@ -65,7 +65,6 @@ export default function Auth({ navigation, route }) {
       );
       setIsOTPSent(true);
     } catch (error) {
-      Alert.alert("Error", "User with similar password already exists");
       console.error("Registration Error:", error);
     } finally {
       setIsLoading(false);

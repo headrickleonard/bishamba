@@ -142,7 +142,6 @@ const HomeScreen = ({ navigation }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
     const [showFullName, setShowFullName] = useState(false);
-    const [rating, setRating] = useState(0); // Add state for rating
 
     useEffect(() => {
       if (imageSource.uri === product?.images[0]) {
@@ -183,9 +182,7 @@ const HomeScreen = ({ navigation }) => {
       }
       return product?.name;
     };
-    const handleRatingPress = (rate) => {
-      setRating(rate); // Update the rating state with the clicked star
-    };
+   
     return (
       <TouchableOpacity
         activeOpacity={0.8}

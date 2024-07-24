@@ -745,3 +745,27 @@ export const handleImageUploadAndPredict = async (photoUri) => {
         console.error('Error in upload and prediction process:', error);
     }
 };
+
+
+export const sendPredictionIds = async (ids) => {
+    const url = `${BASE_URL}prediction-mng/my-predictions`;
+    const options = {
+        method: 'POST',
+        url: url,
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        data: {
+            predictionsIds: ids,
+        },
+    };
+
+    try {
+        const response = await axios.request(options);
+        console.log('Server response:', response.data);
+        return response.data;
+    } catch (error) {
+        console.error('Error sending prediction IDs:', error);
+        throw error;
+    }
+};

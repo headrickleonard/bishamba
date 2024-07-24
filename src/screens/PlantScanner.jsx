@@ -21,6 +21,7 @@ import RBSheet from "react-native-raw-bottom-sheet";
 import PlantsList from "../components/form/PlantsList";
 import { uploadImageForPrediction, makePrediction } from "../api";
 import { insertDisease, getTableSchema, createTable } from "../db/database";
+import { storePlantId } from "../utils";
 
 const PlantScanner = ({ route, navigation }) => {
   const [isScanning, setIsScanning] = useState(false);
@@ -79,21 +80,11 @@ const PlantScanner = ({ route, navigation }) => {
         setStatus("Generating report...");
         const predictionData = await makePrediction(selectedPlant.id, imageUrl);
         console.log("the prediction results are:", predictionData.data);
-
-        // Uncomment and use this if you want to store disease in local db
-        // insertDisease({
-        //   diseaseId: predictionData.data.diseaseId,
-        //   diseasesCode: predictionData.data.diseasesCode,
-        //   commonName: predictionData.data.commonName,
-        //   scientificName: predictionData.data.scientificName,
-        //   cause: predictionData.data.cause,
-        //   category: predictionData.data.category,
-        //   symptoms: predictionData.data.symptoms,
-        //   comment: predictionData.data.comment,
-        //   management: predictionData.data.management,
-        //   recommendedTreatment: predictionData.data.recommendedTreatment,
-        //   imageUri: imageUrl,
-        // });
+        console.log("the disease id here is:", predictionData.data.diseaseId);
+        
+        // insert the disease in the database
+        // insertDisease(predictionData.data.diseaseId);
+        storePlantId(predictionData.data.diseaseId)
 
         setTimeout(() => {
           setStatus("Plant identified!");
@@ -105,13 +96,6 @@ const PlantScanner = ({ route, navigation }) => {
           setTimeout(() => {
             setIsScanning(false);
             identifyingOpacity.value = withTiming(0, { duration: 500 }, () => {
-              // runOnJS(() => {
-              //   navigation.navigate("Results", {
-              //     plantName: predictionData.plantName,
-              //     plantDetails: predictionData.plantDetails,
-              //     photoUri,
-              //   });
-              // })();
               runOnJS(navigation.navigate)("Results", {
                 details: {
                   imageUrl,

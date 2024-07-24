@@ -1,6 +1,7 @@
 import icon1 from "../assets/images/dawa.png";
 import icon2 from "../assets/images/dawa2.png";
 import icon3 from "../assets/images/dawa3.png";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const data = [
   {
@@ -157,3 +158,24 @@ export const userLevels = [
   { level: 4, name: "Advanced" },
   { level: 5, name: "Expert" },
 ];
+
+
+export const storePlantId = async (id) => {
+  try {
+    const existingIds = await AsyncStorage.getItem('plantIds');
+    const plantIds = existingIds ? JSON.parse(existingIds) : [];
+    plantIds.push(id);
+    await AsyncStorage.setItem('plantIds', JSON.stringify(plantIds));
+  } catch (error) {
+    console.error('Error storing plant ID:', error);
+  }
+};
+
+export const getPlantIds = async () => {
+  try {
+    const existingIds = await AsyncStorage.getItem('plantIds');
+    return existingIds ? JSON.parse(existingIds) : [];
+  } catch (error) {
+    console.error('Error retrieving plant IDs:', error);
+  }
+};
