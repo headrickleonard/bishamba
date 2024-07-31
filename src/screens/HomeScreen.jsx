@@ -20,6 +20,8 @@ import ScreenWrapper from "../components/shared/ScreenWrapper";
 import COLORS from "../const/colors";
 import { PRIMARY_COLOR } from "../styles/styles";
 import { formatTZSCurrency } from "../utils";
+import NoProducts from "../components/empty/NoProducts";
+import { useTranslation } from "react-i18next";
 
 const width = Dimensions.get("window").width / 2 - 30;
 
@@ -32,6 +34,7 @@ const HomeScreen = ({ navigation }) => {
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const { t } = useTranslation();
 
   const fetchCategories = async () => {
     try {
@@ -42,7 +45,7 @@ const HomeScreen = ({ navigation }) => {
           ...response.data.map((item) => item.categoryName),
         ];
         setCategories(categoryNames);
-        console.log("The categories list has:", categoryNames);
+        // console.log("The categories list has:", categoryNames);
       } else {
         setError("Failed to fetch categories");
       }
@@ -57,8 +60,8 @@ const HomeScreen = ({ navigation }) => {
       const response = await getAllProducts();
       if (response && response.status === "success" && response.data) {
         setProducts(response.data);
-        setFilteredProducts(response.data); // Set initial filtered products to all products
-        console.log("The products list has:", response.data);
+        setFilteredProducts(response.data); 
+        // console.log("The products list has:", response.data);
       } else {
         setError("Failed to fetch products");
       }
@@ -72,9 +75,11 @@ const HomeScreen = ({ navigation }) => {
 
   const onRefresh = async () => {
     setRefreshing(true);
+    setLoading(true)
     await fetchCategories();
     await fetchAllProducts();
     setRefreshing(false);
+    setLoading(false)
   };
 
   useEffect(() => {
@@ -92,7 +97,7 @@ const HomeScreen = ({ navigation }) => {
     if (categoryIndex > 0) {
       // Check if a specific category is selected (index > 0)
       const selectedCategory = categories[categoryIndex]; // Get the selected category name
-      console.log("Filtering for category:", selectedCategory);
+      // console.log("Filtering for category:", selectedCategory);
       filtered = products.filter(
         (product) => product.category === selectedCategory
       );
@@ -106,7 +111,7 @@ const HomeScreen = ({ navigation }) => {
       );
     }
 
-    console.log("Filtered products:", filtered);
+    // console.log("Filtered products:", filtered);
     setFilteredProducts(filtered); // Update state with filtered products
   };
 
@@ -164,7 +169,7 @@ const HomeScreen = ({ navigation }) => {
 
     useEffect(() => {
       return () => {
-        console.log("the image is :", product.images[0]);
+        // console.log("the image is :", product.images[0]);
       };
     }, []);
 
@@ -255,12 +260,12 @@ const HomeScreen = ({ navigation }) => {
             />
             <TextInput
               style={styles.searchInput}
-              placeholder="Search agrovet products"
+              placeholder={t("searchPlaceholder")}
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
             <TouchableOpacity activeOpacity={0.8} style={styles.searchButton}>
-              <Text style={styles.searchButtonText}>Search</Text>
+              <Text style={styles.searchButtonText}>{t("search")}</Text>
             </TouchableOpacity>
           </View>
           <Pressable
@@ -292,6 +297,8 @@ const HomeScreen = ({ navigation }) => {
             refreshControl={
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
             }
+            ListEmptyComponent={<NoProducts/>} 
+
           />
         )}
       </SafeAreaView>

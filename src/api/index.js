@@ -747,21 +747,46 @@ export const handleImageUploadAndPredict = async (photoUri) => {
 };
 
 
+// export const sendPredictionIds = async (ids) => {
+//     const url = `${BASE_URL}prediction-mng/my-predictions`;
+//     const options = {
+//         method: 'POST',
+//         // url: url,
+//         headers: {
+//             'Content-Type': 'application/json',
+//         },
+//         data: {
+//             predictionsIds: ["e78b722e-4e0e-4368-9ea2-7bdc9be2b87a", "e78b722e-4e0e-4368-9ea2-7bdc9be2b87a"],
+//             // predictionsIds: ids,
+//         },
+//     };
+
+//     try {
+//         const response = await axios(url, options);
+//         console.log('Server response:', response.data);
+//         return response;
+//     } catch (error) {
+//         console.error('Error sending prediction IDs:', error);
+//         throw error;
+//     }
+// };
+
+
 export const sendPredictionIds = async (ids) => {
     const url = `${BASE_URL}prediction-mng/my-predictions`;
     const options = {
         method: 'POST',
-        url: url,
         headers: {
             'Content-Type': 'application/json',
         },
-        data: {
+        data: JSON.stringify({
             predictionsIds: ids,
-        },
+        }),
     };
 
     try {
-        const response = await axios.request(options);
+        console.log("the payload is:", options.data);
+        const response = await axios(url, options);
         console.log('Server response:', response.data);
         return response.data;
     } catch (error) {

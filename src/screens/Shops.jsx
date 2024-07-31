@@ -24,7 +24,7 @@ const Shops = ({ navigation }) => {
   const fetchShops = async () => {
     try {
       const response = await viewAllShops();
-      console.log("API Response:", response);
+      // console.log("API Response:", response);
       const shops = response.data;
       setShopsList(Array.isArray(shops) ? shops : []);
     } catch (error) {

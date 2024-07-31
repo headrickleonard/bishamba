@@ -1,6 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
+  Platform,
+  NativeModules,
+  Modal,
   SafeAreaView,
   View,
   ScrollView,
@@ -8,61 +11,121 @@ import {
   TouchableOpacity,
   Switch,
   Image,
-  Linking
+  Linking,
 } from "react-native";
 import FeatherIcon from "react-native-vector-icons/Feather";
-import RBSheet from "react-native-raw-bottom-sheet";
-import Login from "../components/form/Login";
+import FontAwesome from "react-native-vector-icons/FontAwesome5";
+import { useTranslation } from "react-i18next";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import i18n from "../translations/i18n"; // Adjust the path if necessary
 import ScreenWrapper from "../components/shared/ScreenWrapper";
-import * as StoreReview from 'expo-store-review';
+import * as StoreReview from "expo-store-review";
+import { useTheme } from "../contexts/ThemeContext";
 
-export default function Account() {
+const languages = [
+  { id: "en", name: "English", country: "US" },
+  { id: "es", name: "Spanish", country: "ES" },
+  { id: "fr", name: "French", country: "FR" },
+  { id: "de", name: "German", country: "DE" },
+  { id: "it", name: "Italian", country: "IT" },
+  { id: "pt", name: "Portuguese", country: "PT" },
+  { id: "zh", name: "Chinese", country: "CN" },
+  { id: "sw", name: "Swahili", country: "TZ" },
+  { id: "hi", name: "Hindi", country: "IN" },
+  { id: "ar", name: "Arabic", country: "EG" },
+
+  // Add more languages as needed
+];
+
+const getDefaultLanguage = async () => {
+  const storedLanguage = await AsyncStorage.getItem("appLanguage");
+  if (storedLanguage) {
+    return languages.find((lang) => lang.id === storedLanguage);
+  }
+
+  const locale =
+    Platform.OS === "ios"
+      ? NativeModules.SettingsManager.settings.AppleLocale ||
+        NativeModules.SettingsManager.settings.AppleLanguages[0]
+      : NativeModules.I18nManager.localeIdentifier;
+  const localeIdentifier = locale.split("_")[0];
+  const language = languages.find((lang) => lang.id === localeIdentifier);
+
+  return language ?? languages[0];
+};
+const handleContactUs = () => {
+  // You might want to use a mailto link or similar
+  Linking.openURL("mailto:joshuasimon@gmail.com");
+};
+
+const handleRateApp = () => {
+  const appStoreURL =
+    "https://play.google.com/store/apps/details?id=com.vastlabs.app&pcampaignid=web_share";
+  Linking.openURL(appStoreURL);
+};
+
+const requestReview = async () => {
+  try {
+    const isAvailable = await StoreReview.isAvailableAsync();
+    if (isAvailable) {
+      await StoreReview.requestReview();
+    } else {
+      Alert.alert(
+        "Rate App",
+        "Rating feature is not available on this device."
+      );
+    }
+  } catch (error) {
+    console.error("Failed to request review:", error);
+    Alert.alert("Error", "An error occurred while requesting the review.");
+  }
+};
+
+export default function Example() {
+  const { t } = useTranslation();
+  const { theme, toggleTheme } = useTheme();
+
+  const [visible, setVisible] = useState(false);
   const [form, setForm] = useState({
-    darkMode: false,
+    language: null,
+    darkMode: theme === "dark",
     emailNotifications: true,
     pushNotifications: false,
   });
-  const sheet = React.useRef();
-  const [isPressed, setIsPressed] = useState(false);
 
-  React.useEffect(() => {
-    sheet.current.open();
+  useEffect(() => {
+    const fetchDefaultLanguage = async () => {
+      const defaultLanguage = await getDefaultLanguage();
+      setForm((form) => ({ ...form, language: defaultLanguage }));
+      i18n.changeLanguage(defaultLanguage.id);
+    };
+
+    fetchDefaultLanguage();
   }, []);
 
-  const openLoginSheet = () => {
-    sheet.current.open();
-  };
-  const handleContactUs = () => {
-    // You might want to use a mailto link or similar
-    Linking.openURL('mailto:joshuasimon@gmail.com');
+  useEffect(() => {
+    setForm({ darkMode: theme === "dark" });
+  }, [theme]);
+
+  const changeLanguage = async (lang) => {
+    setForm({ ...form, language: lang });
+    i18n.changeLanguage(lang.id);
+    await AsyncStorage.setItem("appLanguage", lang.id);
   };
 
-  const handleRateApp = () => {
-    const appStoreURL = "https://play.google.com/store/apps/details?id=com.vastlabs.app&pcampaignid=web_share"; 
-    Linking.openURL(appStoreURL);
-  };
+  if (!form.language) {
+    return null; // or a loading spinner
+  }
 
-  const requestReview = async () => {
-    try {
-      const isAvailable = await StoreReview.isAvailableAsync();
-      if (isAvailable) {
-        await StoreReview.requestReview();
-      } else {
-        Alert.alert('Rate App', 'Rating feature is not available on this device.');
-      }
-    } catch (error) {
-      console.error('Failed to request review:', error);
-      Alert.alert('Error', 'An error occurred while requesting the review.');
-    }
-  };
   return (
     <ScreenWrapper>
       <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
         <View style={styles.container}>
           <View style={styles.profile}>
-            <TouchableOpacity activeOpacity={0.7} 
+            <TouchableOpacity
+              activeOpacity={0.8}
               onPress={() => {
-                // handle onPress
+                /* handle onPress */
               }}
             >
               <View style={styles.profileAvatarWrapper}>
@@ -74,10 +137,10 @@ export default function Account() {
                   style={styles.profileAvatar}
                 />
 
-                <TouchableOpacity activeOpacity={0.7} 
+                <TouchableOpacity
+                  activeOpacity={0.8}
                   onPress={() => {
-                    // handle onPress
-                    openLoginSheet();
+                    /* handle onPress */
                   }}
                 >
                   <View style={styles.profileAction}>
@@ -89,51 +152,55 @@ export default function Account() {
 
             <View>
               <Text style={styles.profileName}>John Doe</Text>
-
               <Text style={styles.profileAddress}>
-                123 Nsalaga Street. Anytown, MBY 17101
+                123 Maple Street. Anytown, PA 17101
               </Text>
             </View>
           </View>
 
-          <ScrollView className="">
+          <ScrollView>
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Preferences</Text>
+              <Text style={styles.sectionTitle}>{t("preferences")}</Text>
 
-              <TouchableOpacity activeOpacity={0.7} 
-                onPress={() => {
-                  // handle onPress
-                }}
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => setVisible(true)}
                 style={styles.row}
               >
                 <View style={[styles.rowIcon, { backgroundColor: "#fe9400" }]}>
                   <FeatherIcon color="#fff" name="globe" size={20} />
                 </View>
 
-                <Text style={styles.rowLabel}>Language</Text>
-
+                <Text style={styles.rowLabel}>{t("language")}</Text>
                 <View style={styles.rowSpacer} />
-
+                <Text style={styles.rowValue}>{form.language.name}</Text>
                 <FeatherIcon color="#C6C6C6" name="chevron-right" size={20} />
               </TouchableOpacity>
 
-              {/* <View style={styles.row}>
-              <View style={[styles.rowIcon, { backgroundColor: '#007afe' }]}>
-                <FeatherIcon color="#fff" name="moon" size={20} />
+              <View style={styles.row}>
+                <View style={[styles.rowIcon, { backgroundColor: "#007afe" }]}>
+                  <FeatherIcon color="#fff" name="moon" size={20} />
+                </View>
+
+                <Text style={styles.rowLabel}>{t("darkMode")}</Text>
+                <View style={styles.rowSpacer} />
+                {/* <Switch
+                  onValueChange={(darkMode) => setForm({ ...form, darkMode })}
+                  value={form.darkMode}
+                /> */}
+                <Switch
+                  onValueChange={(darkMode) => {
+                    setForm({ ...form, darkMode });
+                    toggleTheme(darkMode);
+                  }}
+                  value={form.darkMode}
+                />
               </View>
 
-              <Text style={styles.rowLabel}>Dark Mode</Text>
-
-              <View style={styles.rowSpacer} />
-
-              <Switch
-                onValueChange={darkMode => setForm({ ...form, darkMode })}
-                value={form.darkMode} />
-            </View> */}
-
-              <TouchableOpacity activeOpacity={0.7} 
+              <TouchableOpacity
+                activeOpacity={0.8}
                 onPress={() => {
-                  // handle onPress
+                  /* handle onPress */
                 }}
                 style={styles.row}
               >
@@ -141,10 +208,9 @@ export default function Account() {
                   <FeatherIcon color="#fff" name="navigation" size={20} />
                 </View>
 
-                <Text style={styles.rowLabel}>Location</Text>
-
+                <Text style={styles.rowLabel}>{t("location")}</Text>
                 <View style={styles.rowSpacer} />
-
+                <Text style={styles.rowValue}>Los Angeles, CA</Text>
                 <FeatherIcon color="#C6C6C6" name="chevron-right" size={20} />
               </TouchableOpacity>
 
@@ -153,10 +219,8 @@ export default function Account() {
                   <FeatherIcon color="#fff" name="at-sign" size={20} />
                 </View>
 
-                <Text style={styles.rowLabel}>Email Notifications</Text>
-
+                <Text style={styles.rowLabel}>{t("emailNotifications")}</Text>
                 <View style={styles.rowSpacer} />
-
                 <Switch
                   onValueChange={(emailNotifications) =>
                     setForm({ ...form, emailNotifications })
@@ -166,14 +230,12 @@ export default function Account() {
               </View>
 
               <View style={styles.row}>
-                <View style={[styles.rowIcon, { backgroundColor: "#38C959" }]}>
+                <View style={[styles.rowIcon, { backgroundColor: "#f32e59" }]}>
                   <FeatherIcon color="#fff" name="bell" size={20} />
                 </View>
 
-                <Text style={styles.rowLabel}>Push Notifications</Text>
-
+                <Text style={styles.rowLabel}>{t("pushNotifications")}</Text>
                 <View style={styles.rowSpacer} />
-
                 <Switch
                   onValueChange={(pushNotifications) =>
                     setForm({ ...form, pushNotifications })
@@ -184,92 +246,114 @@ export default function Account() {
             </View>
 
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Resources</Text>
+              <Text style={styles.sectionTitle}>{t("help")}</Text>
 
-              <TouchableOpacity activeOpacity={0.7} 
+              <TouchableOpacity
+                activeOpacity={0.8}
                 onPress={() => {
-                  // handle onPress
-                }}
-                style={styles.row}
-              >
-                <View style={[styles.rowIcon, { backgroundColor: "#8e8d91" }]}>
-                  <FeatherIcon color="#fff" name="flag" size={20} />
-                </View>
-
-                <Text style={styles.rowLabel}>Report Bug</Text>
-
-                <View style={styles.rowSpacer} />
-
-                <FeatherIcon color="#C6C6C6" name="chevron-right" size={20} />
-              </TouchableOpacity>
-
-              <TouchableOpacity activeOpacity={0.7} 
-                onPress={() => {
-                 handleContactUs()
+                  handleContactUs();
                 }}
                 style={styles.row}
               >
                 <View style={[styles.rowIcon, { backgroundColor: "#007afe" }]}>
-                  <FeatherIcon color="#fff" name="mail" size={20} />
+                  <FeatherIcon color="#fff" name="info" size={20} />
                 </View>
 
-                <Text style={styles.rowLabel}>Contact Us</Text>
-
+                <Text style={styles.rowLabel}>{t("contactUs")}</Text>
                 <View style={styles.rowSpacer} />
-
                 <FeatherIcon color="#C6C6C6" name="chevron-right" size={20} />
               </TouchableOpacity>
 
-              <TouchableOpacity activeOpacity={0.7} 
+              <TouchableOpacity
+                activeOpacity={0.8}
                 onPress={() => {
-                  handleRateApp()
-                  // requestReview()
+                  handleRateApp();
                 }}
                 style={styles.row}
               >
                 <View style={[styles.rowIcon, { backgroundColor: "#32c759" }]}>
-                  <FeatherIcon color="#fff" name="star" size={20} />
+                  {Platform.OS === "android" ? (
+                    <FontAwesome color="#fff" name="google-play" size={20} />
+                  ) : (
+                    <FontAwesome color="#fff" name="apple" size={20} />
+                  )}
                 </View>
 
-                <Text style={styles.rowLabel}>Rate in App Store</Text>
-
+                <Text style={styles.rowLabel}>{t("rateInAppStore")}</Text>
                 <View style={styles.rowSpacer} />
-
                 <FeatherIcon color="#C6C6C6" name="chevron-right" size={20} />
               </TouchableOpacity>
             </View>
           </ScrollView>
         </View>
-        <RBSheet
-          // customStyles={{ container: styles.sheet }}
-          height={500}
-          // openDuration={250}
-          ref={sheet}
-          keyboardAvoidingViewEnabled
-          // useNativeDriver={true}
-          customStyles={{
-            wrapper: {
-              backgroundColor: "transparent",
-              
-            },
-            draggableIcon: {
-              backgroundColor: "#000",
-            },
-            container:{
-              backgroundColor:"black"
-            }
-          }}
-          customModalProps={{
-            animationType: "slide",
-            statusBarTranslucent: true,
-          }}
-          customAvoidingViewProps={{
-            enabled: false,
-          }}
-          draggable
+
+        <Modal
+          presentationStyle="pageSheet"
+          animationType="slide"
+          visible={visible}
         >
-          <Login />
-        </RBSheet>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => {
+              setVisible(false);
+            }}
+            style={styles.headerClose}
+          >
+            <FeatherIcon color="#1d1d1d" name="x" size={24} />
+          </TouchableOpacity>
+          <ScrollView contentContainerStyle={styles.content}>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Select Language</Text>
+              {languages.map((lang, index) => {
+                const { id, name, country } = lang;
+                const isActive = form.language.id === id;
+                return (
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    key={id}
+                    // onPress={() => {
+                    //   setForm({ ...form, language: lang });
+                    //   setVisible(false);
+                    // }}
+                    onPress={() => {
+                      changeLanguage(lang);
+                      setVisible(false);
+                    }}
+                  >
+                    <View
+                      style={[
+                        styles.radio,
+                        index === 0 && { borderTopWidth: 0 },
+                      ]}
+                    >
+                      <Image
+                        alt={`Flag of ${country}`}
+                        style={styles.radioImage}
+                        source={{
+                          uri: `https://flagsapi.com/${country}/flat/64.png`,
+                        }}
+                      />
+                      <Text style={styles.radioLabel}>{name}</Text>
+                      <View
+                        style={[
+                          styles.radioCheck,
+                          isActive && styles.radioCheckActive,
+                        ]}
+                      >
+                        <FontAwesome
+                          color="#fff"
+                          name="check"
+                          style={!isActive && { display: "none" }}
+                          size={12}
+                        />
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </ScrollView>
+        </Modal>
       </SafeAreaView>
     </ScreenWrapper>
   );
@@ -281,7 +365,15 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     flexShrink: 1,
     flexBasis: 0,
-    // marginVertical:12
+  },
+  headerClose: {
+    alignSelf: "flex-end",
+    paddingHorizontal: 20,
+    marginTop: 16,
+    marginBottom: 16,
+  },
+  content: {
+    paddingBottom: 60,
   },
   /** Profile */
   profile: {
@@ -328,7 +420,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   sectionTitle: {
-    paddingVertical: 12,
+    paddingBottom: 12,
     fontSize: 12,
     fontWeight: "600",
     color: "#9e9e9e",
@@ -344,7 +436,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#f2f2f2",
     borderRadius: 8,
     marginBottom: 12,
-    paddingHorizontal: 12,
+    paddingLeft: 12,
+    paddingRight: 12,
   },
   rowIcon: {
     width: 32,
@@ -365,8 +458,47 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     flexBasis: 0,
   },
-  sheet: {
-    borderTopLeftRadius: 14,
-    borderTopRightRadius: 14,
+  rowValue: {
+    fontSize: 17,
+    fontWeight: "500",
+    color: "#9a9a9a",
+  },
+  /** Radio */
+  radio: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-start",
+    height: 50,
+    backgroundColor: "#f2f2f2",
+    borderRadius: 8,
+    marginBottom: 12,
+    paddingLeft: 12,
+    paddingRight: 12,
+  },
+  radioImage: {
+    width: 30,
+    height: 30,
+    marginRight: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  radioLabel: {
+    fontSize: 17,
+    fontWeight: "500",
+    color: "#1d1d1d",
+  },
+  radioCheck: {
+    width: 22,
+    height: 22,
+    borderRadius: 9999,
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: "auto",
+  },
+  radioCheckActive: {
+    backgroundColor: "#1d1d1d",
   },
 });

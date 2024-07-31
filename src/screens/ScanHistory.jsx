@@ -1,43 +1,42 @@
-import React, { useState, useEffect, useRef } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import React, { useEffect, useState } from "react";
 import {
+  Image,
+  SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
-  View,
-  ScrollView,
-  Image,
   TextInput,
-  SafeAreaView,
   TouchableOpacity,
+  View,
 } from "react-native";
-import Icon from "react-native-vector-icons/Ionicons";
-import { getSearchHistory, insertSearchTerm } from "../db/database";
-import HistoryFilterChip from "../components/HistoryFilterChip";
-import { Divider } from "react-native-paper";
 import { sendPredictionIds } from "../api/index";
 import { getPlantIds } from "../utils";
 
-export default function App() {
+const ScanHistory = () => {
   const [search, setSearch] = useState("");
-  const [searchHistory, setSearchHistory] = useState([]);
-  const [selectedFilter, setSelectedFilter] = useState("All");
-  const [showSearchButton, setShowSearchButton] = useState(true);
   const [diseasePredictions, setDiseasePredictions] = useState([]);
-
-  const searchTimeout = useRef(null);
-  const timeoutRef = useRef(null);
-
-  const fetchSearchHistory = () => {
-    getSearchHistory((history) => {
-      setSearchHistory(history.map((item) => item.term));
-    });
-  };
+  const [searchHistory, setSearchHistory] = useState([]);
+  const [showSearchButton, setShowSearchButton] = useState(true);
 
   const fetchPlantIds = async () => {
+    const predictionsIds = [
+      "e78b722e-4e0e-4368-9ea2-7bdc9be2b87a",
+      "84486222-82b6-496b-8369-f9fcf7390c00",
+      "f3697f1a-761b-4b45-9196-c4077661e069",
+    ];
     try {
       const ids = await getPlantIds();
-      const response = sendPredictionIds(ids);
-      setDiseasePredictions(response.data.data);
-      console.log("the ids are:", ids);
+      console.log("The ids are:", ids);
+      const response = await sendPredictionIds(predictionsIds);
+      // const response = await sendPredictionIds(ids);
+      console.log("Response data:", response[0].data);
+      if (response && Array.isArray(response)) {
+        setDiseasePredictions(response[0].data);
+        console.log("the diseasePredictions array has:", diseasePredictions);
+      } else {
+        console.error("Unexpected response format:", response);
+      }
     } catch (error) {
       console.error(
         "Error fetching plant IDs or sending prediction IDs:",
@@ -46,20 +45,14 @@ export default function App() {
     }
   };
 
-  const handleSearch = (text) => {
-    setSearch(text);
-    if (text.trim() !== "" && !searchHistory.includes(text)) {
-      insertSearchTerm(text);
-      setSearchHistory([text, ...searchHistory]);
-    }
-  };
+  useEffect(() => {
+    fetchPlantIds();
+  }, []);
 
   const handleInputChange = (text) => {
     setSearch(text);
     setShowSearchButton(false);
-    clearTimeout(timeoutRef.current);
-
-    timeoutRef.current = setTimeout(() => {
+    setTimeout(() => {
       setShowSearchButton(true);
     }, 2000);
   };
@@ -69,33 +62,30 @@ export default function App() {
     setShowSearchButton(true);
   };
 
-  useEffect(() => {
-    fetchSearchHistory();
-    fetchPlantIds();
-  }, []);
-
-  const renderDiseaseCards = (diseases) => {
-    return diseases.map((disease, index) => (
-      <View key={index} style={styles.card}>
-        <Image source={{ uri: disease.imageUri }} style={styles.image} />
-        <View style={styles.textContainer}>
-          <Text style={styles.title}>{disease.predictionId}</Text>
-          <Text style={styles.description}>{disease.symptoms}</Text>
+  const DiseaseCard = ({ SampleDisease }) => {
+    return (
+      <View className="w-full h-20 p-2 bg-slate-200 rounded-xl flex flex-row items-center justify-evenly mb-2">
+        <Image
+          className="h-12 w-12 rounded-full border border-slate-500"
+          source={{
+            uri: SampleDisease?.analyzedImage,
+          }}
+        />
+        <View className="flex flex-col items-start justify-start ml-2">
+          <Text className="font-semibold text-lg">
+            {SampleDisease?.commonName}
+          </Text>
+          <Text className="font-light">{SampleDisease?.comment}</Text>
         </View>
+        <Ionicons name="chevron-forward-circle-sharp" size={24} color="green" />
       </View>
-    ));
+    );
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.searchContainer}>
-          <Icon
-            name="ios-search"
-            size={20}
-            color="#555"
-            style={styles.searchIcon}
-          />
           <TextInput
             style={styles.searchInput}
             placeholder="Search..."
@@ -105,7 +95,6 @@ export default function App() {
           {showSearchButton ? (
             <TouchableOpacity
               onPress={fetchPlantIds}
-              // onPress={() => handleSearch(search)}
               style={styles.searchButton}
             >
               <Text style={styles.searchButtonText}>Search</Text>
@@ -115,47 +104,27 @@ export default function App() {
               onPress={handleClearSearch}
               style={styles.clearButton}
             >
-              <Icon name="ios-close" size={24} color="#000" />
+              <Text style={styles.clearButtonText}>Clear</Text>
             </TouchableOpacity>
           )}
         </View>
 
-        <Text className="text-xl font-semibold mb-4">Recent searches:</Text>
-        {searchHistory.length > 0 ? (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.historyScrollView}
-          >
-            <HistoryFilterChip
-              data={searchHistory}
-              selectedChip={selectedFilter}
-              onSelectChip={(term) => {
-                setSearch(term);
-                setSelectedFilter(term);
-              }}
-            />
-          </ScrollView>
-        ) : (
-          <Text className="text-lg font-semibold text-center">
-            No search history
-          </Text>
-        )}
-
-        <Divider />
-
-        {diseasePredictions.length > 0 ? (
+        {/* {diseasePredictions.length > 0 ? (
           renderDiseaseCards(diseasePredictions)
         ) : (
-          <Text style={styles.noResultsText} className="font-semibold text-xl">
-            No results found for
-            <Text className="font-bold text-black"> "{search}"</Text>
-          </Text>
-        )}
+          <Text style={styles.noResultsText}>No results found</Text>
+        )} */}
+
+        {diseasePredictions.map((disease) => (
+          <DiseaseCard SampleDisease={disease} />
+        ))}
+        <DiseaseCard />
       </ScrollView>
     </SafeAreaView>
   );
-}
+};
+
+export default ScanHistory;
 
 const styles = StyleSheet.create({
   container: {
@@ -195,6 +164,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#555",
   },
+  confidence: {
+    fontSize: 14,
+    color: "#777",
+    marginTop: 5,
+  },
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -202,9 +176,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 10,
     marginBottom: 20,
-  },
-  searchIcon: {
-    marginRight: 10,
   },
   searchInput: {
     flex: 1,
@@ -226,7 +197,13 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 6,
   },
-  historyScrollView: {
-    paddingBottom: 10,
+  clearButton: {
+    backgroundColor: "#f0f0f0",
+    borderRadius: 8,
+    padding: 6,
+  },
+  clearButtonText: {
+    color: "#000",
+    fontSize: 16,
   },
 });

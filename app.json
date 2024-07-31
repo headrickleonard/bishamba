@@ -7,7 +7,7 @@
     "icon": "./assets/logo.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/main_logo.png",
       "resizeMode": "contain",
       "backgroundColor": "#32c759"
     },
@@ -34,7 +34,8 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "react-native-vision-camera"
+      "react-native-vision-camera",
+      "expo-localization"
     ],
     "extra": {
       "eas": {

@@ -13,6 +13,9 @@ import BottomTabs from './src/navigation/BottomTabs';
 import { AuthProvider } from './src/contexts/AuthContext';
 import Toast from 'react-native-toast-message';
 import { createStackNavigator } from '@react-navigation/stack';
+import { I18nextProvider } from 'react-i18next';
+import i18n from './src/translations/i18n';
+import { ThemeProvider } from './src/contexts/ThemeContext';
 
 const Stack = createStackNavigator();
 
@@ -86,32 +89,36 @@ export default function App() {
   }
 
   return (
-    <AuthProvider>
-      <Provider>
-        <GestureHandlerRootView style={{ flex: 1 }}>
-          <NavigationContainer>
-            <StatusBar
-              style="dark"
-              translucent
-              animated
-              backgroundColor="transparent"
+    <ThemeProvider>
+      <AuthProvider>
+        <I18nextProvider i18n={i18n}>
+          <Provider>
+            <GestureHandlerRootView style={{ flex: 1 }}>
+              <NavigationContainer>
+                <StatusBar
+                  style="dark"
+                  translucent
+                  animated
+                  backgroundColor="transparent"
+                />
+                {isFirstLaunch ? (
+                  <Stack.Navigator>
+                    <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
+                    <Stack.Screen name="MainApp" component={BottomTabs} options={{ headerShown: false }} />
+                  </Stack.Navigator>
+                ) : (
+                  <BottomTabs />
+                )}
+              </NavigationContainer>
+            </GestureHandlerRootView>
+            <Toast
+              position='top'
+              topOffset={28}
             />
-            {isFirstLaunch ? (
-              <Stack.Navigator>
-                <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
-                <Stack.Screen name="MainApp" component={BottomTabs} options={{ headerShown: false }} />
-              </Stack.Navigator>
-            ) : (
-              <BottomTabs />
-            )}
-          </NavigationContainer>
-        </GestureHandlerRootView>
-        <Toast
-          position='top'
-          topOffset={28}
-        />
-      </Provider>
-    </AuthProvider>
+          </Provider>
+        </I18nextProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 
