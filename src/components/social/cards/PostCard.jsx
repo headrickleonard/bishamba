@@ -210,14 +210,14 @@ const PostCard = ({ post }) => {
     <View style={styles.commentContainer}>
       <Image
         source={{
-          uri: item.profilePicture || DP,
+          uri: item?.profilePicture || DP,
         }}
         style={styles.profileImage}
       />
       <View style={styles.commentContent}>
-        <Text style={styles.commentText}>{item.content}</Text>
+        <Text style={styles.commentText}>{item?.content}</Text>
         <View style={styles.commentFooter}>
-          <Text style={styles.likesText}>{item.votes.length} Likes</Text>
+          <Text style={styles.likesText}>{item?.votes?.length} Likes</Text>
           <TouchableOpacity
             className="flex right-4 rounded-full border-2 border-white bg-[#F1F1F1] items-center justify-center p-1 -bottom-2"
             onPress={() => {

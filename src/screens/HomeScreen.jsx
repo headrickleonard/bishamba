@@ -141,93 +141,88 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const Card = ({ product }) => {
+    // Early return if product is null or undefined
+    if (!product) {
+        return null; // or return a placeholder component
+    }
+
     const [imageSource, setImageSource] = useState({
-      uri: product?.images[0] || "https://example.com/default-image.png",
+        uri: product.images?.[0] || "https://example.com/default-image.png",
     });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
     const [showFullName, setShowFullName] = useState(false);
 
     useEffect(() => {
-      if (imageSource.uri === product?.images[0]) {
-        setLoading(true);
-        setError(false);
-      }
-    }, [imageSource, product?.images]);
+        if (imageSource.uri === product.images?.[0]) {
+            setLoading(true);
+            setError(false);
+        }
+    }, [imageSource, product.images]);
 
     const handleLoadEnd = () => {
-      setLoading(false);
+        setLoading(false);
     };
 
     const handleError = () => {
-      setLoading(false);
-      setError(true);
-      setImageSource({
-        uri: "https://cdn-icons-png.flaticon.com/128/10446/10446694.png",
-      });
+        setLoading(false);
+        setError(true);
+        setImageSource({
+            uri: "https://cdn-icons-png.flaticon.com/128/10446/10446694.png",
+        });
     };
 
-    useEffect(() => {
-      return () => {
-        // console.log("the image is :", product.images[0]);
-      };
-    }, []);
-
     const toggleShowFullName = () => {
-      setShowFullName(!showFullName);
+        setShowFullName(!showFullName);
     };
 
     const renderProductName = () => {
-      if (product?.name.length > 10) {
-        if (showFullName) {
-          return product?.name;
-        } else {
-          return `${product?.name.substring(0, 12)}...`;
+        const name = product.name || 'Unnamed Product';
+        if (name.length > 10) {
+            return showFullName ? name : `${name.substring(0, 12)}...`;
         }
-      }
-      return product?.name;
+        return name;
     };
    
     return (
-      <TouchableOpacity
-        activeOpacity={0.8}
-        onPress={() => navigation.navigate("Details", { product })}
-      >
-        <View style={style.card}>
-          <View style={{ alignItems: "flex-end" }}>
-          </View>
+        <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => navigation.navigate("Details", { product })}
+        >
+            <View style={style.card}>
+                <View style={{ alignItems: "flex-end" }} />
 
-          {loading && (
-            <ActivityIndicator
-              style={style.activityIndicator}
-              size="large"
-              color={COLORS.primary}
-            />
-          )}
-          <Image
-            source={imageSource}
-            style={style.image}
-            onLoadEnd={handleLoadEnd}
-            onError={handleError}
-          />
+                {loading && (
+                    <ActivityIndicator
+                        style={style.activityIndicator}
+                        size="large"
+                        color={COLORS.primary}
+                    />
+                )}
+                <Image
+                    source={imageSource}
+                    style={style.image}
+                    onLoadEnd={handleLoadEnd}
+                    onError={handleError}
+                />
 
-          <TouchableOpacity onPress={toggleShowFullName}>
-            <Text style={style.productName}>{renderProductName()}</Text>
-          </TouchableOpacity>
-          <Text style={style.price}>{formatTZSCurrency(product?.price)}</Text>
-          <Text style={style.stockStatus}>
-            {product?.isInStock ? "In Stock" : "Out of Stock"}
-          </Text>
-          <View style={style.rating}>
-            <Icon name="star" size={16} color={COLORS.yellow} />
-            <Icon name="star" size={16} color={COLORS.yellow} />
-            <Icon name="star" size={16} color={COLORS.yellow} />
-            <Text style={style.ratingText}>{product?.rating}</Text>
-          </View>
-        </View>
-      </TouchableOpacity>
+                <TouchableOpacity onPress={toggleShowFullName}>
+                    <Text style={style.productName}>{renderProductName()}</Text>
+                </TouchableOpacity>
+                <Text style={style.price}>{formatTZSCurrency(product.price || 0)}</Text>
+                <Text style={style.stockStatus}>
+                    {product.isInStock ? "In Stock" : "Out of Stock"}
+                </Text>
+                <View style={style.rating}>
+                    <Icon name="star" size={16} color={COLORS.yellow} />
+                    <Icon name="star" size={16} color={COLORS.yellow} />
+                    <Icon name="star" size={16} color={COLORS.yellow} />
+                    <Text style={style.ratingText}>{product.rating || 'N/A'}</Text>
+                </View>
+            </View>
+        </TouchableOpacity>
     );
-  };
+};
 
   return (
     <ScreenWrapper>
@@ -289,10 +284,12 @@ const HomeScreen = ({ navigation }) => {
               paddingBottom: 50,
             }}
             numColumns={2}
-            data={filteredProducts}
-            renderItem={({ item }) => {
-              return <Card product={item} />;
-            }}
+            // data={filteredProducts}
+            // renderItem={({ item }) => {
+            //   return <Card product={item} />;
+            // }}
+            data={filteredProducts.filter(product => product !== null)}
+            renderItem={({ item }) => item ? <Card product={item} /> : null}          
             keyExtractor={(item) => item.id.toString()}
             refreshControl={
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />

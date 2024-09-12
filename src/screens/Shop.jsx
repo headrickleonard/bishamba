@@ -73,23 +73,30 @@ const Shop = ({ route, navigation }) => {
 
   // Render product item in two-column grid
   const renderProductItem = ({ item }) => {
+    // Early return if item is null or undefined
+    if (!item) {
+      return null;
+    }
+  
     const isExpanded = expandedProductIds.includes(item.id);
-    const description =
-      item.description.length > 30 && !isExpanded
+    const description = item.description
+      ? item.description.length > 30 && !isExpanded
         ? `${item.description.slice(0, 30)}...`
-        : item.description;
-
+        : item.description
+      : 'No description available';
+  
     return (
-      <TouchableOpacity activeOpacity={0.9}
+      <TouchableOpacity
+        activeOpacity={0.9}
         style={styles.productCard}
-        onPress={() =>
-          navigation.navigate("ProductDetails", { productId:  item  })
-          // navigation.navigate("ProductDetails", { productId: item.id })
-        }
+        onPress={() => navigation.navigate("ProductDetails", { productId: item.id })}
       >
-        <Image source={{ uri: item.images[0] }} style={styles.productImage} />
-        <Text style={styles.productName}>{item.name}</Text>
-        <Text style={styles.productPrice}>{formatTZSCurrency(item.price)}</Text>
+        <Image 
+          source={{ uri: item.images && item.images.length > 0 ? item.images[0] : 'https://via.placeholder.com/150' }} 
+          style={styles.productImage} 
+        />
+        <Text style={styles.productName}>{item.name || 'Unnamed Product'}</Text>
+        <Text style={styles.productPrice}>{formatTZSCurrency(item.price || 0)}</Text>
         {/* <Text
           style={styles.productDescription}
           onPress={() => toggleDescription(item.id)}
@@ -119,12 +126,15 @@ const Shop = ({ route, navigation }) => {
         <Text style={styles.errorText}>No products found.</Text>
       ) : (
         <FlatList
-          data={filteredProducts}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={renderProductItem}
-          contentContainerStyle={styles.contentContainer}
-          numColumns={2} // Two-column layout
-        />
+        data={filteredProducts.filter(product => product !== null && product !== undefined)}
+        keyExtractor={(item) => item?.id?.toString() || Math.random().toString()}
+        renderItem={renderProductItem}
+        contentContainerStyle={styles.contentContainer}
+        numColumns={2}
+        ListEmptyComponent={() => (
+          <Text style={styles.emptyListText}>No products found.</Text>
+        )}
+      />
       )}
     </SafeAreaView>
     </ScreenWrapper>
@@ -190,6 +200,12 @@ const styles = StyleSheet.create({
   errorText: {
     color: "red",
     textAlign: "center",
+    marginTop: 20,
+  },
+  emptyListText: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: '#888',
     marginTop: 20,
   },
 });

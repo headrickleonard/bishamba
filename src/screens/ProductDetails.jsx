@@ -9,11 +9,12 @@ import {
   TouchableOpacity,
   Alert,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import COLORS from "../const/colors";
 import ScreenWrapper from "../components/shared/ScreenWrapper";
-import { sendNotification } from "../api";
+import { sendNotification, getProductById } from "../api";
 import { useAuth } from "../contexts/AuthContext";
 import * as Location from "expo-location";
 import Toast from "react-native-toast-message";
@@ -21,11 +22,42 @@ import { formatTZSCurrency } from "../utils/index";
 import Accordion from "../components/accordion/Accordion";
 
 const Details = ({ navigation, route }) => {
-  const { accessToken,logout } = useAuth();
+  const { accessToken } = useAuth();
   const { productId } = route.params || {};
   const [value, setValue] = useState(1);
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    console.log("ProductId received:", productId); // Debugging log
+    if (productId) {
+      fetchProductDetails(productId);
+    } else {
+      console.error("No productId provided");
+      setLoading(false);
+      setErrorMsg("No product ID provided");
+    }
+  }, [productId]);
+
+  const fetchProductDetails = async (id) => {
+    try {
+      console.log("Fetching product details for ID:", id); // Debugging log
+      const response = await getProductById(id);
+      console.log("API Response:", response); // Debugging log
+      if (response && response.data) {
+        setProduct(response.data);
+      } else {
+        setErrorMsg("Failed to fetch product details");
+      }
+    } catch (error) {
+      console.error("Error fetching product details:", error);
+      setErrorMsg("Error fetching product details");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleConnect = () => {
     if (accessToken) {
@@ -33,7 +65,6 @@ const Details = ({ navigation, route }) => {
     } else {
       navigation.navigate("Auth", { returnScreen: "Details" });
     }
-    // logout()
   };
 
   const sendNotificationToShopOwner = async () => {
@@ -42,15 +73,20 @@ const Details = ({ navigation, route }) => {
       return;
     }
 
+    if (!product) {
+      Alert.alert("Error", "Product details not available. Please try again.");
+      return;
+    }
+
     const notificationData = {
-      shopId: productId.shopId,
-      productId: productId.id,
+      shopId: product.shopId,
+      productId: product.id,
       quantity: value,
-      totalPrice: productId.price * value,
+      totalPrice: product.price * value,
       userLocation: `Latitude: ${location.coords.latitude}, Longitude: ${location.coords.longitude}`,
       notificationChannel: "SMS",
       notificationType: "EXTERNAL",
-      imageUrl: productId.images?.image1,
+      imageUrl: product.images?.image1,
     };
 
     try {
@@ -58,12 +94,11 @@ const Details = ({ navigation, route }) => {
       Toast.show({
         type: "success",
         text1: "Notification sent successfully.",
-        text2: `You are ordering: ${value} ${productId.name}`,
+        text2: `You are ordering: ${value} ${product.name}`,
         text2Style: { fontWeight: "bold", marginVertical: 4, fontSize: 12 },
         visibilityTime: 5000,
       });
       navigation.goBack();
-      console.log("Notification sent successfully:", response);
     } catch (error) {
       console.error("Error sending notification:", error);
       Toast.show({
@@ -87,22 +122,37 @@ const Details = ({ navigation, route }) => {
     })();
   }, []);
 
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
+  }
+
+  if (errorMsg) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>{errorMsg}</Text>
+      </View>
+    );
+  }
+
+  if (!product) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>No product data available</Text>
+      </View>
+    );
+  }
+
   return (
     <ScreenWrapper>
       <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.white }}>
-        <ScrollView contentContainerStyle={{ flexGrow: 1 ,paddingBottom:24}}>
-          {/* <View style={styles.header}>
-            <Pressable style={styles.backButton}>
-              <Icon
-                name="arrow-back"
-                size={24}
-                onPress={() => navigation.goBack()}
-              />
-            </Pressable>
-          </View> */}
+        <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 24 }}>
           <View style={styles.imageContainer}>
             <Image
-              source={{ uri: productId.images[0] }}
+              source={{ uri: product.images?.[0] }}
               style={{ width: "100%", height: "100%", resizeMode: "contain" }}
             />
           </View>
@@ -110,26 +160,24 @@ const Details = ({ navigation, route }) => {
             <View style={styles.shopDetails}>
               <View style={styles.badgeContainer}>
                 <Icon name="location-on" size={18} color={COLORS.yellow} />
-                <Text style={styles.badgeText}>{productId.shopName}</Text>
+                <Text style={styles.badgeText}>{product.shopName}</Text>
               </View>
               <View style={styles.priceTag}>
                 <Text style={styles.priceText}>
-                  {formatTZSCurrency(productId.price)}
+                  {formatTZSCurrency(product.price)}
                 </Text>
               </View>
             </View>
             <View style={styles.productNameContainer}>
-              <Text style={styles.productName}>
-                {productId.name}
-              </Text>
+              <Text style={styles.productName}>{product.name}</Text>
             </View>
             <View style={styles.aboutContainer}>
-              {/* <Text style={styles.aboutTitle}>About</Text> */}
-              <Accordion description={productId.description} />
+              <Accordion description={product.description} />
             </View>
             <View style={styles.quantityContainer}>
               <View style={styles.quantityControls}>
-                <TouchableOpacity activeOpacity={0.8}
+                <TouchableOpacity
+                  activeOpacity={0.8}
                   onPress={() => {
                     if (value > 1) setValue(value - 1);
                   }}
@@ -138,14 +186,19 @@ const Details = ({ navigation, route }) => {
                   <Text style={styles.borderBtnText}>-</Text>
                 </TouchableOpacity>
                 <Text style={styles.quantityText}>{value}</Text>
-                <TouchableOpacity activeOpacity={0.8}
+                <TouchableOpacity
+                  activeOpacity={0.8}
                   onPress={() => setValue(value + 1)}
                   style={styles.borderBtn}
                 >
                   <Text style={styles.borderBtnText}>+</Text>
                 </TouchableOpacity>
               </View>
-              <TouchableOpacity activeOpacity={0.8} onPress={handleConnect} style={styles.buyBtn}>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={handleConnect}
+                style={styles.buyBtn}
+              >
                 <Text style={styles.buyBtnText}>Connect</Text>
               </TouchableOpacity>
             </View>
@@ -235,7 +288,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom:12
+    marginBottom: 12,
   },
   quantityControls: {
     flexDirection: "row",
@@ -271,6 +324,22 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 18,
     fontWeight: "bold",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 16,
+    textAlign: 'center',
   },
 });
 
