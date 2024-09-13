@@ -46,7 +46,7 @@ export default function PlantsList({ onSelectPlant }) {
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Identify the Plant</Text>
           <Text style={styles.headerSubtitle}>
-            Your choice helps us make more detailed analysis
+            ◯ Your choice helps us make more detailed analysis
           </Text>
         </View>
         {plants.map((plant, index) => {
@@ -116,12 +116,13 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: "gold",
     marginTop: 6,
-    borderWidth: 1,
-    borderColor: "gold",
+    // borderWidth: 1,
+    // borderColor: "#363638",
     borderRadius: 8,
     padding: 4,
-    borderStyle: "dashed",
+    // borderStyle: "dashed",
     textAlign: "center",
+    color:"#363638"
   },
   /** Radio */
   radio: {

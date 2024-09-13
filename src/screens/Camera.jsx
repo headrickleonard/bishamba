@@ -1,140 +1,61 @@
-import { Camera, CameraType, FlashMode } from "expo-camera";
-import { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useCallback, useMemo } from "react";
+import { Camera, CameraType } from "expo-camera";
 import {
-  Button,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  Alert,
-  Image,
+  StatusBar,
+  Modal,
+  ScrollView,
 } from "react-native";
-import * as MediaLibrary from "expo-media-library";
 import * as ImagePicker from "expo-image-picker";
-import { useFocusEffect, useIsFocused } from "@react-navigation/native"; // Import useFocusEffect and useIsFocused
-import buttonIcon from "../assets/icons/button.png";
-import BottomSheet from "react-native-raw-bottom-sheet";
-import { PinchGestureHandler, State } from "react-native-gesture-handler";
-import LoopText from "react-native-loop-text";
-import CustomDialog from "../components/Dialog";
-import { IconButton } from "react-native-paper";
+import { useFocusEffect, useIsFocused } from "@react-navigation/native";
+import { PinchGestureHandler } from "react-native-gesture-handler";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  interpolate,
+  Extrapolate,
+} from "react-native-reanimated";
+import { LinearGradient } from 'expo-linear-gradient';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+
+const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 
 export default function CameraScreen({ navigation }) {
-  const [type, setType] = useState(CameraType.back);
-  const [permission, requestPermission] = Camera.useCameraPermissions();
+  const [type] = useState(CameraType.back);
   const cameraRef = useRef(null);
-  const bottomSheetRef = useRef();
-  const [selectedMedia, setSelectedMedia] = useState(null);
   const [zoom, setZoom] = useState(0);
-  const [imageUri, setImageUri] = useState(null);
   const [isCameraReady, setIsCameraReady] = useState(false);
+  const isFocused = useIsFocused();
 
-  // Custom dialog states
-  const [errorDialogVisible, setErrorDialogVisible] = useState(false);
-  const [successDialogVisible, setSuccessDialogVisible] = useState(false);
-  const isFocused = useIsFocused(); // Hook to determine if the screen is focused
-
-  const showErrorDialog = () => setErrorDialogVisible(true);
-  const showSuccessDialog = () => setSuccessDialogVisible(true);
-  const hideErrorDialog = () => setErrorDialogVisible(false);
-  const hideSuccessDialog = () => setSuccessDialogVisible(false);
+  const buttonScale = useSharedValue(1);
+  const [isInfoModalVisible, setIsInfoModalVisible] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
       if (cameraRef.current) {
-        cameraRef.current.resumePreview(); // Resume the camera preview when the screen gains focus
+        cameraRef.current.resumePreview();
       }
-
       return () => {
         if (cameraRef.current) {
-          cameraRef.current.pausePreview(); // Pause the camera preview when the screen loses focus
+          cameraRef.current.pausePreview();
         }
       };
     }, [cameraRef])
   );
 
-  const requestPermissions = async () => {
-    const cameraPermission = await requestCameraPermissionsAsync();
-    const mediaLibraryPermission = await requestMediaLibraryPermissionsAsync();
-
-    if (
-      cameraPermission.status !== "granted" ||
-      mediaLibraryPermission.status !== "granted"
-    ) {
-      console.error("Permission to access camera or media library denied");
-    }
-  };
-
-  const initializeCamera = async () => {
-    if (!isCameraReady) {
-      try {
-        const { status } = await Camera.requestCameraPermissionsAsync();
-        if (status === "granted") {
-          setIsCameraReady(true);
-        }
-      } catch (error) {
-        console.error("Error initializing camera:", error);
-      }
-    }
-  };
-
-  useEffect(() => {
-    requestPermissions();
-  }, []);
-
-  useEffect(() => {
-    if (isFocused) {
-      initializeCamera(); // Reinitialize the camera when the screen gains focus
-    }
-  }, [isFocused]);
-
-  // const openGallery = async () => {
-  //   try {
-  //     const media = await ImagePicker.launchImageLibraryAsync({
-  //       mediaTypes: ImagePicker.MediaTypeOptions.All,
-  //       allowsEditing: true,
-  //       quality: 1,
-  //     });
-
-  //     if (!media.canceled) {
-  //       setSelectedMedia(media.assets[0].uri);
-  //       navigation.navigate("ScanDetails", { photo: media.assets[0].uri });
-  //     }
-  //   } catch (error) {
-  //     console.error("Gallery Picker Error:", error);
-  //   }
-  // };
-
-  // const takePhoto = async () => {
-  //   if (cameraRef.current && isCameraReady) {
-  //     try {
-  //       const options = {
-  //         quality: 1, // Image quality (0 to 1)
-  //         base64: true, // Return base64-encoded image data
-  //         exif: true, // Include EXIF data (orientation, etc.)
-  //       };
-
-  //       const data = await cameraRef.current.takePictureAsync(options);
-  //       console.log(data.uri);
-  //       setImageUri(data.uri);
-  //       navigation.navigate("ScanDetails", { photo: data.uri });
-  //     } catch (error) {
-  //       console.error("Failed to take picture:", error);
-  //     }
-  //   }
-  // };
   const takePhoto = async () => {
     if (cameraRef.current && isCameraReady) {
       try {
-        const options = {
-          quality: 1, // Image quality (0 to 1)
-          base64: true, // Return base-image-encoded image data
-          exif: true, // Include EXIF data (orientation, etc.)
-        };
-        const data = await cameraRef.current.takePictureAsync(options);
-        console.log(data.uri);
-        setImageUri(data.uri);
-        navigation.navigate("PlantScanner", { photoUri: data.uri }); // Navigate with image URI
+        const data = await cameraRef.current.takePictureAsync({
+          quality: 1,
+          base64: true,
+          exif: true,
+        });
+        navigation.navigate("PlantScanner", { photoUri: data.uri });
       } catch (error) {
         console.error("Failed to take picture:", error);
       }
@@ -143,141 +64,119 @@ export default function CameraScreen({ navigation }) {
   
   const openGallery = async () => {
     try {
-      const media = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.All,
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
+        aspect: [1, 1],
         quality: 1,
       });
-      if (!media.canceled) {
-        setSelectedMedia(media.assets[0].uri);
-        navigation.navigate("PlantScanner", { photoUri: media.assets[0].uri }); // Navigate with image URI
+      if (!result.canceled) {
+        navigation.navigate("PlantScanner", { photoUri: result.assets[0].uri });
       }
     } catch (error) {
       console.error("Gallery Picker Error:", error);
     }
   };
-  
 
+  const handlePinchGesture = useCallback(({ nativeEvent }) => {
+    setZoom(interpolate(
+      nativeEvent.scale,
+      [1, 2],
+      [0, 1],
+      Extrapolate.CLAMP
+    ));
+  }, []);
 
-  const handlePinchGesture = (event) => {
-    if (event.nativeEvent.state === State.ACTIVE) {
-      const newZoom = Math.min(Math.max(event.nativeEvent.scale, 0), 1);
-      setZoom(newZoom);
-    }
+  const animatedButtonStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: withSpring(buttonScale.value) }],
+  }));
+
+  const handlePressIn = useCallback(() => {
+    buttonScale.value = 0.9;
+  }, []);
+
+  const handlePressOut = useCallback(() => {
+    buttonScale.value = 1;
+  }, []);
+
+  const toggleInfoModal = () => {
+    setIsInfoModalVisible(!isInfoModalVisible);
   };
 
-  const handleCameraReady = () => {
-    setIsCameraReady(true);
-  };
+  const memoizedCamera = useMemo(() => (
+    <PinchGestureHandler onGestureEvent={handlePinchGesture}>
+      <Camera
+        style={styles.camera}
+        type={type}
+        zoom={zoom}
+        ratio="16:9"
+        ref={cameraRef}
+        onCameraReady={() => setIsCameraReady(true)}
+      >
+        <LinearGradient
+          colors={['transparent', 'rgba(0,0,0,0.8)']}
+          style={styles.gradient}
+        />
+      </Camera>
+    </PinchGestureHandler>
+  ), [type, zoom, cameraRef, handlePinchGesture]);
 
-  const Dialogger = () => (
-    <View style={styles.container}>
-      <IconButton
-        icon="alert-circle"
-        color="#FF5733"
-        size={30}
-        onPress={showErrorDialog}
-      />
-      <IconButton
-        icon="check-circle"
-        color="#33FF6B"
-        size={30}
-        onPress={showSuccessDialog}
-      />
-
-      <CustomDialog
-        visible={errorDialogVisible}
-        onDismiss={hideErrorDialog}
-        type="error"
-        message="An error occurred. Please try again."
-      />
-
-      <CustomDialog
-        visible={successDialogVisible}
-        onDismiss={hideSuccessDialog}
-        type="success"
-        message="Success! Action completed successfully."
-      />
-    </View>
-  );
+  if (!isFocused) {
+    return null;
+  }
 
   return (
     <View style={styles.container}>
-      <PinchGestureHandler onGestureEvent={handlePinchGesture}>
-        <Camera
-          style={styles.camera}
-          type={type}
-          zoom={zoom}
-          ratio="1:1"
-          ref={cameraRef}
-          autoFocus
-          onCameraReady={handleCameraReady}
-        >
-          <View style={styles.frame}>
-            <BottomSheet
-              ref={bottomSheetRef}
-              closeOnDragDown={true}
-              closeOnPressMask={true}
-              height={600}
-              animationType="slide"
-              customStyles={{
-                wrapper: {
-                  backgroundColor: "transparent",
-                },
-                draggableIcon: {
-                  backgroundColor: "#000",
-                },
-                container: {
-                  borderTopLeftRadius: 20,
-                  borderTopRightRadius: 20,
-                  backgroundColor: "#e6e6e6",
-                },
-              }}
-            >
-              {selectedMedia && (
-                <Image
-                  source={{ uri: selectedMedia }}
-                  className="w-40 h-40 rounded-lg m-1"
-                />
-              )}
+      <StatusBar barStyle="light-content" />
+      {memoizedCamera}
+      <View style={styles.overlay}>
+        <Text style={styles.instructionText}>
+          Scan affected part of your plant
+        </Text>
+        <Text style={styles.hintText}>
+          Tip: Focus on the affected area and ensure good lighting
+        </Text>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity onPress={openGallery} style={styles.iconButton}>
+            <MaterialCommunityIcons name="image" size={30} color="white" />
+          </TouchableOpacity>
+          <AnimatedTouchableOpacity
+            onPress={takePhoto}
+            onPressIn={handlePressIn}
+            onPressOut={handlePressOut}
+            style={[styles.captureButton, animatedButtonStyle]}
+          >
+            <View style={styles.captureButtonInner} />
+          </AnimatedTouchableOpacity>
+          <TouchableOpacity onPress={toggleInfoModal} style={styles.iconButton}>
+            <MaterialCommunityIcons name="information" size={30} color="white" />
+          </TouchableOpacity>
+        </View>
+      </View>
 
-              {imageUri && (
-                <Image
-                  source={{ uri: imageUri }}
-                  className="w-40 h-40 rounded-lg m-1"
-                />
-              )}
-            </BottomSheet>
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isInfoModalVisible}
+        onRequestClose={toggleInfoModal}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <ScrollView>
+              <Text style={styles.modalTitle}>Camera Usage Tips</Text>
+              <Text style={styles.modalText}>1. Ensure good lighting for clear images.</Text>
+              <Text style={styles.modalText}>2. Hold the camera steady to avoid blur.</Text>
+              <Text style={styles.modalText}>3. Focus on the affected area of the plant.</Text>
+              <Text style={styles.modalText}>4. Capture the entire leaf or plant part if possible.</Text>
+              <Text style={styles.modalText}>5. Avoid shadows on the plant.</Text>
+              <Text style={styles.modalText}>6. Take multiple photos from different angles for best results.</Text>
+            </ScrollView>
+            <TouchableOpacity onPress={toggleInfoModal} style={styles.closeButton}>
+              <Text style={styles.closeButtonText}>Close</Text>
+            </TouchableOpacity>
           </View>
-        </Camera>
-      </PinchGestureHandler>
-      <View className="h-fit p-2">
-        <LoopText
-          textArray={["scan affected part..", "piga picha mmea wako.."]}
-          className="text-white text-center font-bold text-xl rounded-full"
-        />
-      </View>
-      <View className="flex flex-row items-center justify-evenly p-2 bg-green-500 py-8 rounded-t-3xl w-full">
-        <TouchableOpacity onPress={openGallery}>
-          <Image
-            source={require("../assets/icons/thumbnail.png")}
-            className=" h-12 w-12"
-          />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={takePhoto}>
-          <Image
-            source={require("../assets/icons/button.png")}
-            className=" h-12 w-12"
-          />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Image
-            source={require("../assets/icons/info.png")}
-            className=" h-12 w-12"
-          />
-          {/* <Dialogger /> */}
-        </TouchableOpacity>
-      </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -285,39 +184,92 @@ export default function CameraScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-    backgroundColor: "#000000",
+    backgroundColor: "black",
   },
   camera: {
     flex: 1,
   },
+  gradient: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: '50%',
+  },
+  overlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 20,
+  },
+  instructionText: {
+    color: 'white',
+    fontSize: 18,
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  hintText: {
+    color: 'white',
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 20,
+    fontStyle: 'italic',
+  },
   buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
+  iconButton: {
+    padding: 10,
+  },
+  captureButton: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  captureButtonInner: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'white',
+  },
+  modalContainer: {
     flex: 1,
-    flexDirection: "row",
-    backgroundColor: "transparent",
-    margin: 64,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
-  button: {
-    flex: 1,
-    alignSelf: "flex-end",
-    alignItems: "center",
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 20,
+    width: '80%',
+    maxHeight: '80%',
   },
-  text: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "white",
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
   },
-  frame: {
-    position: "absolute",
-    top: "10%",
-    left: "5%",
-    width: "90%",
-    height: "80%",
-    bottom: "10%",
-    borderColor: "green",
-    borderWidth: 4,
-    borderRadius: 40,
-    zIndex: 10,
-    borderStyle: "dashed",
+  modalText: {
+    fontSize: 16,
+    marginBottom: 10,
+  },
+  closeButton: {
+    backgroundColor: '#4CAF50',
+    padding: 10,
+    borderRadius: 5,
+    alignSelf: 'center',
+    marginTop: 20,
+  },
+  closeButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
 });

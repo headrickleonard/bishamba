@@ -26,7 +26,15 @@ const resources = {
       createPost: "Create post",
       location: "Location",
       help: "Help",
-      noProducts: "No products available"
+      noProducts: "No products available",
+      logoutConfirmation: "Logout Confirmation",
+      logoutMessage: "Are you sure you want to log out?",
+      cancel: "Cancel",
+      logout: "Logout",
+      accountDetails: "Account Details",
+      username: "Username",
+      phoneNumber: "Phone Number",
+      email: "Email"
     },
   },
   es: {
@@ -51,7 +59,15 @@ const resources = {
       createPost: "Crear publicación",
       location: "ubicación",
       help: "ayuda",
-      noProducts: "No hay productos disponibles"
+      noProducts: "No hay productos disponibles",
+      logoutConfirmation: "Confirmación de cierre de sesión",
+      logoutMessage: "¿Estás seguro de que quieres cerrar sesión?",
+      cancel: "Cancelar",
+      logout: "Cerrar sesión",
+      accountDetails: "Detalles de la cuenta",
+      username: "Nombre de usuario",
+      phoneNumber: "Número de teléfono",
+      email: "Correo electrónico"
     },
   },
   fr: {
@@ -76,8 +92,15 @@ const resources = {
       createPost: "Créer une publication",
       location: "emplacement",
       help: "aide",
-      noProducts: "Aucun produit disponible"
-
+      noProducts: "Aucun produit disponible",
+      logoutConfirmation: "Confirmation de déconnexion",
+      logoutMessage: "Êtes-vous sûr de vouloir vous déconnecter ?",
+      cancel: "Annuler",
+      logout: "Déconnexion",
+      accountDetails: "Détails du compte",
+      username: "Nom d'utilisateur",
+      phoneNumber: "Numéro de téléphone",
+      email: "E-mail"
     }
   },
   de: {
@@ -102,8 +125,15 @@ const resources = {
       createPost: "Beitrag erstellen",
       location: "Standort",
       help: "Hilfe",
-      noProducts: "Keine Produkte verfügbar"
-
+      noProducts: "Keine Produkte verfügbar",
+      logoutConfirmation: "Abmeldung bestätigen",
+      logoutMessage: "Sind Sie sicher, dass Sie sich abmelden möchten?",
+      cancel: "Abbrechen",
+      logout: "Abmelden",
+      accountDetails: "Kontodetails",
+      username: "Benutzername",
+      phoneNumber: "Telefonnummer",
+      email: "E-Mail"
     }
   },
   it: {
@@ -128,8 +158,15 @@ const resources = {
       createPost: "Crea un post",
       location: "posizione",
       help: "aiuto",
-      noProducts: "Nessun prodotto disponibile"
-
+      noProducts: "Nessun prodotto disponibile",
+      logoutConfirmation: "Conferma logout",
+      logoutMessage: "Sei sicuro di voler effettuare il logout?",
+      cancel: "Annulla",
+      logout: "Logout",
+      accountDetails: "Dettagli account",
+      username: "Nome utente",
+      phoneNumber: "Numero di telefono",
+      email: "Email"
     }
   },
   pt: {
@@ -154,8 +191,15 @@ const resources = {
       createPost: "Criar publicação",
       location: "localização",
       help: "ajuda",
-      noProducts: "Nenhum produto disponível"
-
+      noProducts: "Nenhum produto disponível",
+      logoutConfirmation: "Confirmação de saída",
+      logoutMessage: "Tem certeza de que deseja sair?",
+      cancel: "Cancelar",
+      logout: "Sair",
+      accountDetails: "Detalhes da conta",
+      username: "Nome de usuário",
+      phoneNumber: "Número de telefone",
+      email: "E-mail"
     }
   },
   hi: {
@@ -180,8 +224,15 @@ const resources = {
       createPost: "पोस्ट बनाएं",
       location: "स्थान",
       help: "सहायता",
-      noProducts: "कोई उत्पाद उपलब्ध नहीं है"
-
+      noProducts: "कोई उत्पाद उपलब्ध नहीं है",
+      logoutConfirmation: "लॉगआउट पुष्टिकरण",
+      logoutMessage: "क्या आप वाकई लॉगआउट करना चाहते हैं?",
+      cancel: "रद्द करें",
+      logout: "लॉगआउट",
+      accountDetails: "खाते का विवरण",
+      username: "उपयोगकर्ता नाम",
+      phoneNumber: "फ़ोन नंबर",
+      email: "ईमेल"
     }
   },
   sw: {
@@ -206,8 +257,15 @@ const resources = {
       createPost: "Unda chapisho",
       location: "Mahali",
       help: "Msaada",
-      noProducts: "Hakuna bidhaa zilizopo"
-
+      noProducts: "Hakuna bidhaa zilizopo",
+      logoutConfirmation: "Uthibitisho wa Kuondoka",
+      logoutMessage: "Je, una uhakika unataka kuondoka?",
+      cancel: "Ghairi",
+      logout: "Ondoka",
+      accountDetails: "Maelezo ya Akaunti",
+      username: "Jina la mtumiaji",
+      phoneNumber: "Namba ya simu",
+      email: "Barua pepe"
     }
   },
   zh: {
@@ -232,11 +290,19 @@ const resources = {
       createPost: "创建帖子",
       location: "位置",
       help: "帮助",
-      noProducts: "沒有可用產品"
-
+      noProducts: "沒有可用產品",
+      logoutConfirmation: "登出确认",
+      logoutMessage: "您确定要登出吗？",
+      cancel: "取消",
+      logout: "登出",
+      accountDetails: "账户详情",
+      username: "用户名",
+      phoneNumber: "电话号码",
+      email: "电子邮箱"
     }
-  }
-};
+  },
+
+}
 
 i18n
   .use(initReactI18next)

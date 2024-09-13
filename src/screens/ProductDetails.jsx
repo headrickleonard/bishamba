@@ -22,7 +22,7 @@ import { formatTZSCurrency } from "../utils/index";
 import Accordion from "../components/accordion/Accordion";
 
 const Details = ({ navigation, route }) => {
-  const { accessToken } = useAuth();
+  const { accessToken ,logout} = useAuth();
   const { productId } = route.params || {};
   const [value, setValue] = useState(1);
   const [location, setLocation] = useState(null);
@@ -62,9 +62,11 @@ const Details = ({ navigation, route }) => {
   const handleConnect = () => {
     if (accessToken) {
       sendNotificationToShopOwner();
+      logout()
     } else {
       navigation.navigate("Auth", { returnScreen: "Details" });
     }
+   
   };
 
   const sendNotificationToShopOwner = async () => {

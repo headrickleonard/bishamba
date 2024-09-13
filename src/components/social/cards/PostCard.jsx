@@ -45,7 +45,7 @@ const PostCard = ({ post }) => {
   const refRBSheet = useRef();
   const [isSheetOpen, setSheetOpen] = useState(false);
   const [message, setMessage] = useState("");
-  const [comments, setComments] = useState(post.comments || []);
+  const [comments, setComments] = useState(post?.comments || []);
   const [isEmojiPickerVisible, setIsEmojiPickerVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [profileImage, setProfileImage] = useState(DP);
@@ -53,9 +53,9 @@ const PostCard = ({ post }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { accessToken, totalTimeSpent, category } = useAuth();
-  const [isLiked, setIsLiked] = useState(post.isLiked || false);
+  const [isLiked, setIsLiked] = useState(post?.isLiked || false);
   const [likeLoading, setLikeLoading] = useState(false);
-  const [likesCount, setLikesCount] = useState(post.votes.length);
+  const [likesCount, setLikesCount] = useState(post?.votes?.length || 0);
 
   const DP =
     "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?w=740&t=st=1721577394~exp=1721577994~hmac=0dcd162551b0da58abf8cae491250a34fb7091ab2a495548605f17149fecd0a9";
@@ -109,11 +109,11 @@ const PostCard = ({ post }) => {
   };
 
   useEffect(() => {
-    if (imageSource?.uri === post.profilePicture) {
+    if (imageSource?.uri === post?.profilePicture) {
       setLoading(true);
       setError(false);
     }
-  }, [imageSource, post.profilePicture]);
+  }, [imageSource, post?.profilePicture]);
 
   const handleError = () => {
     setLoading(false);
@@ -259,7 +259,7 @@ const PostCard = ({ post }) => {
               />
               <View>
                 <Text style={styles.title}>
-                  {post.userName || "Unknown User"}
+                  {post?.userName || "Unknown User"}
                 </Text>
                 <View style={styles.liveStoryContainer}>
                   <LocateFixedIcon size={12} color={"#ff69b4"} />
@@ -275,13 +275,13 @@ const PostCard = ({ post }) => {
               <Text style={styles.followButtonText}>{category}</Text>
             </TouchableOpacity>
           </View>
-          {post.images && post.images[0].length > 0 && (
+          {post?.images && post.images[0] && post.images[0].length > 0 && (
             <Image source={{ uri: post.images[0] }} style={styles.postImage} />
           )}
-          <Text style={styles.snippet}>{post.content || "No content"}</Text>
+          <Text style={styles.snippet}>{post?.content || "No content"}</Text>
           <View style={styles.footerContainer}>
             <Text style={styles.timeText}>
-              Posted {getRelativeTime(post.createdDate) || "some time ago"}
+              Posted {getRelativeTime(post?.createdDate) || "some time ago"}
             </Text>
             <View style={styles.iconContainer}>
               <Text style={styles.timeText}>{likesCount}</Text>
@@ -381,7 +381,7 @@ const PostCard = ({ post }) => {
               <View style={styles.row}>
                 <TouchableOpacity style={styles.profilePicture}>
                   <Image
-                    source={{ uri: post.profilePicture || DP }}
+                    source={{ uri: post?.profilePicture || DP }}
                     style={styles.profileImage}
                   />
                 </TouchableOpacity>

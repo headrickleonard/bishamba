@@ -7,6 +7,7 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [accessToken, setAccessToken] = useState(null);
+  const [userData, setUserData] = useState(null);
   const [appState, setAppState] = useState(AppState.currentState);
   const [startTime, setStartTime] = useState(null);
   const [totalTimeSpent, setTotalTimeSpent] = useState(0);
@@ -14,18 +15,22 @@ export const AuthProvider = ({ children }) => {
   const [currentLevel, setCurrentLevel] = useState("");
 
   useEffect(() => {
-    const fetchAccessToken = async () => {
+    const fetchStoredData = async () => {
       try {
         const storedToken = await AsyncStorage.getItem("accessToken");
+        const storedUserData = await AsyncStorage.getItem("userData");
         if (storedToken) {
           setAccessToken(storedToken);
         }
+        if (storedUserData) {
+          setUserData(JSON.parse(storedUserData));
+        }
       } catch (error) {
-        console.error("Error fetching access token:", error);
+        console.error("Error fetching stored data:", error);
       }
     };
 
-    fetchAccessToken();
+    fetchStoredData();
   }, []);
 
   useEffect(() => {
@@ -84,21 +89,33 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const clearAccessToken = async () => {
+  const storeUserData = async (data) => {
     try {
-      await AsyncStorage.removeItem("accessToken");
-      setAccessToken(null);
+      await AsyncStorage.setItem("userData", JSON.stringify(data));
+      setUserData(data);
     } catch (error) {
-      console.error("Error clearing access token:", error);
+      console.error("Error storing user data:", error);
     }
   };
 
-  const login = async (accessToken) => {
+  const clearStoredData = async () => {
     try {
-      if (!accessToken) {
-        throw new Error("Access token is null or undefined.");
+      await AsyncStorage.removeItem("accessToken");
+      await AsyncStorage.removeItem("userData");
+      setAccessToken(null);
+      setUserData(null);
+    } catch (error) {
+      console.error("Error clearing stored data:", error);
+    }
+  };
+
+  const login = async (loginData) => {
+    try {
+      if (!loginData || !loginData.data) {
+        throw new Error("Login data is invalid.");
       }
-      await storeAccessToken(accessToken);
+      await storeAccessToken(loginData.data.accessToken);
+      await storeUserData(loginData.data.userData);
     } catch (error) {
       console.error("Login error:", error);
       // Handle error appropriately, e.g., show an error message
@@ -107,7 +124,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await clearAccessToken();
+      await clearStoredData();
       // Additional logout logic if needed
     } catch (error) {
       console.error("Logout error:", error);
@@ -135,6 +152,7 @@ export const AuthProvider = ({ children }) => {
     <AuthContext.Provider
       value={{
         accessToken,
+        userData,
         login,
         logout,
         totalTimeSpent: formatTime(totalTimeSpent),

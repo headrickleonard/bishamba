@@ -45,7 +45,7 @@ const HomeScreen = ({ navigation }) => {
           ...response.data.map((item) => item.categoryName),
         ];
         setCategories(categoryNames);
-        // console.log("The categories list has:", categoryNames);
+        // console.log("Fetched categories:", categoryNames);
       } else {
         setError("Failed to fetch categories");
       }
@@ -59,9 +59,9 @@ const HomeScreen = ({ navigation }) => {
     try {
       const response = await getAllProducts();
       if (response && response.status === "success" && response.data) {
+        // console.log("Raw API response:", JSON.stringify(response.data, null, 2));
         setProducts(response.data);
         setFilteredProducts(response.data); 
-        // console.log("The products list has:", response.data);
       } else {
         setError("Failed to fetch products");
       }
@@ -69,7 +69,7 @@ const HomeScreen = ({ navigation }) => {
     } catch (error) {
       console.error("Error fetching products:", error);
       setError("Error fetching products");
-      setLoading(false); // Set loading to false in case of error
+      setLoading(false);
     }
   };
 
@@ -93,26 +93,27 @@ const HomeScreen = ({ navigation }) => {
 
   const filterProducts = () => {
     let filtered = products; // Start with all products
-
+  
     if (categoryIndex > 0) {
-      // Check if a specific category is selected (index > 0)
-      const selectedCategory = categories[categoryIndex]; // Get the selected category name
+      const selectedCategory = categories[categoryIndex].toLowerCase();
       // console.log("Filtering for category:", selectedCategory);
-      filtered = products.filter(
-        (product) => product.category === selectedCategory
-      );
+      filtered = products.filter((product) => {
+        const productCategory = (product.categoryName || '').toLowerCase();
+        const match = productCategory === selectedCategory;
+        // console.log(`Product: ${product.name}, Category: ${product.categoryName}, Match: ${match}`);
+        return match;
+      });
     }
-
+  
     if (searchQuery) {
-      // Apply search query filtering if there is a search query
       console.log("Filtering for search query:", searchQuery);
       filtered = filtered.filter((product) =>
         product.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-
-    // console.log("Filtered products:", filtered);
-    setFilteredProducts(filtered); // Update state with filtered products
+  
+    console.log("Filtered products:", filtered.map(p => p.name));
+    setFilteredProducts(filtered);
   };
 
   const CategoryList = () => {
@@ -123,7 +124,10 @@ const HomeScreen = ({ navigation }) => {
             <TouchableOpacity
               key={index}
               activeOpacity={0.8}
-              onPress={() => setCategoryIndex(index)}
+              onPress={() => {
+                console.log(`Selected category: ${item}, index: ${index}`);
+                setCategoryIndex(index);
+              }}
             >
               <Text
                 style={[
@@ -284,10 +288,6 @@ const HomeScreen = ({ navigation }) => {
               paddingBottom: 50,
             }}
             numColumns={2}
-            // data={filteredProducts}
-            // renderItem={({ item }) => {
-            //   return <Card product={item} />;
-            // }}
             data={filteredProducts.filter(product => product !== null)}
             renderItem={({ item }) => item ? <Card product={item} /> : null}          
             keyExtractor={(item) => item.id.toString()}

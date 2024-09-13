@@ -83,10 +83,9 @@ export default function Auth({ navigation, route }) {
       const userData = { phoneEmailOrUserName: email, password };
 
       const response = await loginUser(userData);
-      console.log("the response from login in is", response);
+      console.log("the response from login is", response);
       if (response && response.status === "success") {
-        const { accessToken } = response.data;
-        await login(accessToken);
+        await login(response); // Pass the entire response to the login function
         Alert.alert("Success", "Login successful.");
         navigation.navigate(route.params.returnScreen);
       } else {

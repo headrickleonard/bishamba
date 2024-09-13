@@ -23,6 +23,7 @@ import CustomHeader from "../components/CustomHeader";
 import { slideTransition } from "../const/spring";
 import Auth from "../screens/Auth";
 import ImageViewer from "../screens/ImageViewer";
+import AskCommunity from "../screens/AskCommunity";
 
 
 
@@ -176,6 +177,11 @@ function RootStack() {
       <Stack.Screen
         name="ImageViewer"
         component={ImageViewer}
+        options={transition}
+      />
+       <Stack.Screen
+        name="AskComunity"
+        component={AskCommunity}
         options={transition}
       />
       <Stack.Screen name="Results"

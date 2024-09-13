@@ -1,130 +1,136 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Image,
   SafeAreaView,
-  ScrollView,
+  FlatList,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
+  RefreshControl,
+  Alert,
 } from "react-native";
 import { sendPredictionIds } from "../api/index";
 import { getPlantIds } from "../utils";
 
-const ScanHistory = () => {
+const ScanHistory = ({ navigation }) => {
   const [search, setSearch] = useState("");
   const [diseasePredictions, setDiseasePredictions] = useState([]);
-  const [searchHistory, setSearchHistory] = useState([]);
-  const [showSearchButton, setShowSearchButton] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const fetchPlantIds = async () => {
-    const predictionsIds = [
-      "e78b722e-4e0e-4368-9ea2-7bdc9be2b87a",
-      "84486222-82b6-496b-8369-f9fcf7390c00",
-      "f3697f1a-761b-4b45-9196-c4077661e069",
-    ];
+  const fetchScanHistory = useCallback(async () => {
+    setLoading(true);
     try {
       const ids = await getPlantIds();
-      console.log("The ids are:", ids);
-      const response = await sendPredictionIds(predictionsIds);
-      // const response = await sendPredictionIds(ids);
-      console.log("Response data:", response[0].data);
-      if (response && Array.isArray(response)) {
-        setDiseasePredictions(response[0].data);
-        console.log("the diseasePredictions array has:", diseasePredictions);
+      console.log("Fetched plant IDs:", ids);
+      if (ids.length === 0) {
+        console.log("No scan history found");
+        setDiseasePredictions([]);
+        return;
+      }
+      const response = await sendPredictionIds(ids);
+      console.log("API response:", response);
+      if (response && Array.isArray(response) && response[0]?.data) {
+        if (response[0].data.length === 0) {
+          console.log("API returned empty data array");
+          Alert.alert("No History", "You haven't scanned any plants yet.");
+        } else {
+          setDiseasePredictions(response[0].data);
+        }
       } else {
         console.error("Unexpected response format:", response);
+        Alert.alert("Error", "Failed to fetch scan history. Please try again later.");
       }
     } catch (error) {
-      console.error(
-        "Error fetching plant IDs or sending prediction IDs:",
-        error
-      );
+      console.error("Error fetching scan history:", error);
+      Alert.alert("Error", "Failed to fetch scan history. Please try again later.");
+    } finally {
+      setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchPlantIds();
   }, []);
 
-  const handleInputChange = (text) => {
-    setSearch(text);
-    setShowSearchButton(false);
-    setTimeout(() => {
-      setShowSearchButton(true);
-    }, 2000);
+  useEffect(() => {
+    fetchScanHistory();
+  }, [fetchScanHistory]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchScanHistory();
+    setRefreshing(false);
+  }, [fetchScanHistory]);
+
+  const handleSearch = () => {
+    // Implement search functionality here
+    console.log("Searching for:", search);
   };
 
-  const handleClearSearch = () => {
-    setSearch("");
-    setShowSearchButton(true);
-  };
-
-  const DiseaseCard = ({ SampleDisease }) => {
-    return (
-      <View className="w-full h-20 p-2 bg-slate-200 rounded-xl flex flex-row items-center justify-evenly mb-2">
-        <Image
-          className="h-12 w-12 rounded-full border border-slate-500"
-          source={{
-            uri: SampleDisease?.analyzedImage,
-          }}
-        />
-        <View className="flex flex-col items-start justify-start ml-2">
-          <Text className="font-semibold text-lg">
-            {SampleDisease?.commonName}
-          </Text>
-          <Text className="font-light">{SampleDisease?.comment}</Text>
-        </View>
-        <Ionicons name="chevron-forward-circle-sharp" size={24} color="green" />
+  const DiseaseCard = ({ item }) => (
+    <TouchableOpacity
+      style={styles.card}
+      onPress={() => navigation.navigate('DiseaseDetails', { disease: item })}
+    >
+      <Image
+        style={styles.image}
+        source={{ uri: item.analyzedImage }}
+        defaultSource={require('../assets/images/plant1.png')} // Add a placeholder image
+      />
+      <View style={styles.textContainer}>
+        <Text style={styles.title}>{item.commonName}</Text>
+        <Text style={styles.description} numberOfLines={2}>{item.comment}</Text>
+        <Text style={styles.confidence}>Confidence: {item.confidence}%</Text>
       </View>
-    );
-  };
+      <Ionicons name="chevron-forward" size={24} color="green" />
+    </TouchableOpacity>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search..."
-            value={search}
-            onChangeText={handleInputChange}
-          />
-          {showSearchButton ? (
-            <TouchableOpacity
-              onPress={fetchPlantIds}
-              style={styles.searchButton}
-            >
-              <Text style={styles.searchButtonText}>Search</Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              onPress={handleClearSearch}
-              style={styles.clearButton}
-            >
-              <Text style={styles.clearButtonText}>Clear</Text>
-            </TouchableOpacity>
-          )}
+      <View style={styles.searchContainer}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search..."
+          value={search}
+          onChangeText={setSearch}
+        />
+        <TouchableOpacity onPress={handleSearch} style={styles.searchButton}>
+          <Text style={styles.searchButtonText}>Search</Text>
+        </TouchableOpacity>
+      </View>
+
+      {loading && <Text style={styles.loadingText}>Loading...</Text>}
+
+      {/* {!loading && diseasePredictions.length === 0 && (
+        <View style={styles.emptyStateContainer}>
+          <Ionicons name="leaf-outline" size={64} color="gray" />
+          <Text style={styles.emptyStateText}>No scan history found</Text>
+          <Text style={styles.emptyStateSubtext}>Start scanning plants to build your history!</Text>
         </View>
+      )} */}
 
-        {/* {diseasePredictions.length > 0 ? (
-          renderDiseaseCards(diseasePredictions)
-        ) : (
-          <Text style={styles.noResultsText}>No results found</Text>
-        )} */}
-
-        {diseasePredictions.map((disease) => (
-          <DiseaseCard SampleDisease={disease} />
-        ))}
-        <DiseaseCard />
-      </ScrollView>
+      <FlatList
+        data={diseasePredictions}
+        renderItem={({ item }) => <DiseaseCard item={item} />}
+        keyExtractor={(item) => item.id}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        ListEmptyComponent={
+          !loading && (
+            <View style={styles.emptyStateContainer}>
+              <Ionicons name="leaf-outline" size={64} color="gray" />
+              <Text style={styles.emptyStateText}>No results found</Text>
+              <Text style={styles.emptyStateSubtext}>Try adjusting your search or scan more plants</Text>
+            </View>
+          )
+        }
+      />
     </SafeAreaView>
   );
 };
-
-export default ScanHistory;
 
 const styles = StyleSheet.create({
   container: {
@@ -206,4 +212,30 @@ const styles = StyleSheet.create({
     color: "#000",
     fontSize: 16,
   },
+  loadingText: {
+    fontSize: 16,
+    color: "#555",
+    textAlign: "center",
+    marginTop: 20,
+  },
+  emptyStateContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 50,
+  },
+  emptyStateText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#555',
+    marginTop: 20,
+  },
+  emptyStateSubtext: {
+    fontSize: 14,
+    color: '#777',
+    marginTop: 10,
+    textAlign: 'center',
+  },
 });
+
+export default ScanHistory;

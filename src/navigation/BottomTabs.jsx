@@ -1,32 +1,47 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { createStackNavigator } from "@react-navigation/stack";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import HomeScreen from "../screens/HomeScreen";
 import DiagnoseScreen from "../screens/DetailsScreen";
 import ScanScreen from "../screens/Camera";
+import PlantScanner from "../screens/PlantScanner";
+import AskCommunity from "../screens/AskCommunity";
 import ShopsScreen from "../screens/Ecommerce";
 import AccountScreen from "../screens/Account";
 import { Image, View, StyleSheet } from "react-native";
 import CustomTabBar from "./CustomTabBar";
 import RootStack from "./index";
 import { BlurView } from "expo-blur";
-import OnboardingScreen from "../screens/OnboardingScreen";
-import SocialFeedScreen from "../screens/SocialFeedScreen";
-import NoInternetScreen from "../screens/NoInternetScreen";
-import TabView from "../components/social/TabView";
-import ResultsScreen from "../screens/ResultScreen";
-import ScanHistory from "../screens/ScanHistory";
-import PlantScanner from "../screens/PlantScanner";
-import PostCard from "../components/social/cards/PostCard";
-import Shops from "../screens/Shops";
-import { transition } from "../config";
-import SensorAnimation from "../components/Sensema";
-import CircleLoader from "../components/CircleLoader";
 import Threads from "../screens/Threads";
 import CustomHeader from "../components/CustomHeader";
-import ShutdownIOS from "../components/ShutdownIOS";
+import ScanHistory from "../screens/ScanHistory";
+import { transition } from "../config";
+import Auth from "../screens/Auth";
 
 const Tab = createBottomTabNavigator();
+const ScanStack = createStackNavigator();
+
+const ScanStackScreen = () => (
+  <ScanStack.Navigator screenOptions={{ headerShown: false }}>
+    <ScanStack.Screen name="Camera" component={ScanScreen} />
+    <ScanStack.Screen
+      name="PlantScanner"
+      component={PlantScanner}
+      options={transition}
+    />
+    <ScanStack.Screen
+      name="AskCommunity"
+      component={AskCommunity}
+      options={transition}
+    />
+      <ScanStack.Screen
+        name="Auth"
+        component={Auth}
+        options={transition}
+      />
+  </ScanStack.Navigator>
+);
 
 const BottomTabs = () => {
   return (
@@ -61,18 +76,14 @@ const BottomTabs = () => {
                     elevation: 5,
                     borderWidth: 2,
                     borderColor: "#02ed58",
-                    // bottom: 15,
                   }}
                 >
                   <Image
                     source={require("../assets/icons/scan.png")}
-                    style={[
-                      {
-                        // tintColor: color,
-                        width: size * 1.5,
-                        height: size * 1.5,
-                      },
-                    ]}
+                    style={{
+                      width: size * 1.5,
+                      height: size * 1.5,
+                    }}
                   />
                 </View>
               );
@@ -84,27 +95,6 @@ const BottomTabs = () => {
             case "Account":
               iconName = focused ? "cog-outline" : "account-outline";
               break;
-          }
-
-          // Customize Scan button
-          if (route.name === "Scan") {
-            return (
-              <Icon
-                name={iconName}
-                size={size * 1.5}
-                color={color}
-                style={{
-                  backgroundColor: "white",
-                  borderRadius: size,
-                  padding: 10,
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.8,
-                  shadowRadius: 2,
-                  elevation: 5,
-                }}
-              />
-            );
           }
 
           return <Icon name={iconName} size={size} color={color} />;
@@ -122,7 +112,6 @@ const BottomTabs = () => {
           />
         ),
       })}
-      // backBehavior="history"
     >
       <Tab.Screen
         name="Home"
@@ -138,7 +127,6 @@ const BottomTabs = () => {
       <Tab.Screen
         name="Diagnose"
         component={ScanHistory}
-        // component={OnboardingScreen}
         options={{
           headerShown: false,
           gestureEnabled: true,
@@ -146,7 +134,7 @@ const BottomTabs = () => {
       />
       <Tab.Screen
         name="Scan"
-        component={ScanScreen}
+        component={ScanStackScreen}
         options={{
           headerShown: false,
           gestureEnabled: true,
@@ -154,31 +142,23 @@ const BottomTabs = () => {
       />
       <Tab.Screen
         name="Shops"
-        // component={CircleLoader}
-        // component={TabView}
-        // component={SocialFeedScreen}
-        // component={ScanHistory}
-        // component={ResultsScreen}
-        // component={PlantScanner}
-        // component={PostCard}
         component={Threads}
-        // component={ShutdownIOS}
-        // options={transition}
         options={({ navigation }) => ({
-          header: () => <CustomHeader navigation={navigation} title={"Community spaces"} showCreateIcon={true}/>,
-          // ...TransitionPresets.SlideFromRightIOS, 
-          // ...slideTransition,
-
+          header: () => (
+            <CustomHeader
+              navigation={navigation}
+              title={"Community spaces"}
+              showCreateIcon={true}
+            />
+          ),
           headerStyle: {
-            height: 100, 
+            height: 100,
           },
           headerTransparent: true,
-          
         })}
       />
       <Tab.Screen
         name="Account"
-        // component={ShutdownIOS}
         component={AccountScreen}
         options={{
           headerShown: false,

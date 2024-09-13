@@ -12,6 +12,7 @@ import {
   Switch,
   Image,
   Linking,
+  Alert
 } from "react-native";
 import FeatherIcon from "react-native-vector-icons/Feather";
 import FontAwesome from "react-native-vector-icons/FontAwesome5";
@@ -21,6 +22,8 @@ import i18n from "../translations/i18n"; // Adjust the path if necessary
 import ScreenWrapper from "../components/shared/ScreenWrapper";
 import * as StoreReview from "expo-store-review";
 import { useTheme } from "../contexts/ThemeContext";
+import { useAuth } from "../contexts/AuthContext";
+import { useNavigation } from "@react-navigation/native";
 
 const languages = [
   { id: "en", name: "English", country: "US" },
@@ -81,9 +84,11 @@ const requestReview = async () => {
   }
 };
 
-export default function Example() {
+export default function Account() {
   const { t } = useTranslation();
   const { theme, toggleTheme } = useTheme();
+  const { userData, logout } = useAuth(); // Get userData from useAuth
+  const navigation = useNavigation();
 
   const [visible, setVisible] = useState(false);
   const [form, setForm] = useState({
@@ -113,7 +118,31 @@ export default function Example() {
     await AsyncStorage.setItem("appLanguage", lang.id);
   };
 
-  if (!form.language) {
+  const handleLogout = async () => {
+    Alert.alert(
+      t("logoutConfirmation"),
+      t("logoutMessage"),
+      [
+        {
+          text: t("cancel"),
+          style: "cancel",
+        },
+        {
+          text: t("logout"),
+          onPress: async () => {
+            await logout();
+            navigation.reset({
+              index: 0,
+              routes: [{ name: "Login" }],
+            });
+          },
+        },
+      ],
+      { cancelable: false }
+    );
+  };
+
+  if (!form.language || !userData) {
     return null; // or a loading spinner
   }
 
@@ -151,10 +180,8 @@ export default function Example() {
             </TouchableOpacity>
 
             <View>
-              <Text style={styles.profileName}>John Doe</Text>
-              <Text style={styles.profileAddress}>
-                123 Maple Street. Anytown, PA 17101
-              </Text>
+              <Text style={styles.profileName}>{userData.userName}</Text>
+              <Text style={styles.profileAddress}>{userData.email}</Text>
             </View>
           </View>
 
@@ -191,7 +218,7 @@ export default function Example() {
                 <Switch
                   onValueChange={(darkMode) => {
                     setForm({ ...form, darkMode });
-                    toggleTheme(darkMode);
+                    // toggleTheme(darkMode);
                   }}
                   value={form.darkMode}
                 />
@@ -283,6 +310,16 @@ export default function Example() {
                 <View style={styles.rowSpacer} />
                 <FeatherIcon color="#C6C6C6" name="chevron-right" size={20} />
               </TouchableOpacity>
+              <View style={styles.section}>
+                <TouchableOpacity
+                  style={styles.logoutButton}
+                  onPress={handleLogout}
+                  activeOpacity={0.8}
+                >
+                  <FeatherIcon name="log-out" size={20} color="#fff" />
+                  <Text style={styles.logoutButtonText}>{t("logout")}</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </ScrollView>
         </View>
@@ -500,5 +537,21 @@ const styles = StyleSheet.create({
   },
   radioCheckActive: {
     backgroundColor: "#1d1d1d",
+  },
+  logoutButton: {
+    backgroundColor: '#ff3b30',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginTop: 4,
+    marginBottom:8
+  },
+  logoutButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
   },
 });
