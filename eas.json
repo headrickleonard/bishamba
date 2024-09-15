@@ -1,11 +1,13 @@
 {
   "cli": {
-    "version": ">= 6.0.0"
+    "version": ">= 6.0.0",
+    "appVersionSource": "remote"
   },
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "channel": "preview"
     },
     "preview": {
       "ios": {
@@ -16,7 +18,9 @@
       }
     },
     "production": {
-      "distribution": "internal"
+      "distribution": "store",
+      "autoIncrement": true,
+      "channel": "production"
     }
   }
 }

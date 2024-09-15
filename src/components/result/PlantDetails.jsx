@@ -1,5 +1,5 @@
 import { useNavigation } from "@react-navigation/native";
-import { ScanSearch, Leaf } from "lucide-react-native";
+import { ScanSearch, Leaf,AlertTriangle } from "lucide-react-native";
 import React, { useState, useEffect } from "react";
 import {
   Image,
@@ -88,6 +88,20 @@ const PlantDetails = ({ plantDetails }) => {
       prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]
     );
   };
+  
+  const handleTreatmentPress = (item) => {
+    // product object to match the expected format in Details screen
+    const product = {
+      id: item.productId,
+      name: item.name,
+      price: item.price,
+      images: [item.imageUri], 
+      description: item.fullDescription,
+      shopId: item.shopId,
+      shopName: item.shopName,
+    };
+    navigation.navigate("Details", { product });
+  };
 
   return (
     <ScrollView style={styles.container}>
@@ -142,16 +156,15 @@ const PlantDetails = ({ plantDetails }) => {
         <Text style={styles.sectionTitle}>Recommended Treatments</Text>
         {showWarning && (
           <Animated.View style={[styles.warningContainer, animatedWarningStyle]}>
-            <Card style={styles.warningCard}>
-              <Card.Title
-                title="Warning"
-                subtitle="Please be careful when using the recommended products/treatments."
-                left={(props) => <IconButton {...props} icon="alert" color="red" />}
-                right={(props) => (
-                  <IconButton {...props} icon="close" onPress={() => setShowWarning(false)} />
-                )}
-              />
-            </Card>
+            <View style={styles.warningContent}>
+              <AlertTriangle color="#FFA500" size={24} style={styles.warningIcon} />
+              <Text style={styles.warningText}>
+                Please exercise caution when using the recommended products/treatments.
+              </Text>
+              <TouchableOpacity onPress={() => setShowWarning(false)} style={styles.closeButton}>
+                <Text style={styles.closeButtonText}>×</Text>
+              </TouchableOpacity>
+            </View>
           </Animated.View>
         )}
         <ScrollView
@@ -168,6 +181,13 @@ const PlantDetails = ({ plantDetails }) => {
                   {expandedIndexes.includes(index) ? item.fullDescription : item.shortDescription}
                   {!expandedIndexes.includes(index) && " ..."}
                 </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+              activeOpacity={0.8}
+                style={styles.orderButton}
+                onPress={() => handleTreatmentPress(item)}
+              >
+                <Text style={styles.orderButtonText}>View Details</Text>
               </TouchableOpacity>
             </View>
           ))}
@@ -252,13 +272,32 @@ const styles = {
     marginTop: 10,
   },
   warningContainer: {
-    marginBottom: 10,
+    marginBottom: 15,
   },
-  warningCard: {
+  warningContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#FFF3CD',
+    borderRadius: 8,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#FFA500',
   },
-  recommendedContainer: {
-    marginTop: 10,
+  warningIcon: {
+    marginRight: 10,
+  },
+  warningText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#664D03',
+  },
+  closeButton: {
+    padding: 5,
+  },
+  closeButtonText: {
+    fontSize: 20,
+    color: '#664D03',
+    fontWeight: 'bold',
   },
   recommendedItem: {
     width: width * 0.7,
@@ -281,6 +320,17 @@ const styles = {
   recommendedDescription: {
     fontSize: 14,
     color: '#666',
+    marginBottom: 10,
+  },
+  orderButton: {
+    backgroundColor: '#4CAF50',
+    borderRadius: 5,
+    padding: 10,
+    alignItems: 'center',
+  },
+  orderButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
 };
 

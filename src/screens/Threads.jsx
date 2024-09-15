@@ -24,7 +24,7 @@ const Threads = () => {
       try {
         const postsData = await getAllPosts();
         setPosts(postsData);
-        console.log("The fetched posts are:", postsData);
+        
       } catch (error) {
         console.error("Error fetching posts:", error);
       } finally {

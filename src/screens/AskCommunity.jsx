@@ -123,7 +123,7 @@ const AskCommunity = ({ route, navigation }) => {
 
   const constructDescription = () => {
     let description = `I need help with my ${plantName || "plant"}. `;
-    description += `It's a ${answers.plantType} and the ${answers.plantPart} is affected. `;
+    description += `the ${answers.plantPart} is affected. `;
     description += `I've noticed ${answers.symptoms} for ${answers.duration}. `;
     if (additionalInfo) {
       description += `Additional information: ${additionalInfo}`;

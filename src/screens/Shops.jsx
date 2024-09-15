@@ -16,6 +16,7 @@ import { viewAllShops } from "../api";
 import Loader from "../components/loaders/List";
 import COLORS from "../const/colors";
 import IconMaterial from "react-native-vector-icons/MaterialIcons";
+import ScreenWrapper from "../components/shared/ScreenWrapper";
 
 const Shops = ({ navigation }) => {
   const [shopsList, setShopsList] = useState([]);
@@ -55,7 +56,35 @@ const Shops = ({ navigation }) => {
     );
   }
 
+
+  const getInitials = (name) => {
+    return name
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const renderShopLogo = (item) => {
+    if (item.shopLogo) {
+      return (
+        <Image
+          source={{ uri: item.shopLogo }}
+          style={styles.profileImage}
+        />
+      );
+    } else {
+      return (
+        <View style={[styles.profileImage, styles.initialsContainer]}>
+          <Text style={styles.initialsText}>{getInitials(item.shopName)}</Text>
+        </View>
+      );
+    }
+  };
+
   return (
+    <ScreenWrapper>
     <SafeAreaView style={styles.container}>
       <View style={styles.searchContainer}>
         <Icon name="search" size={20} color="gray" style={styles.searchIcon} />
@@ -71,55 +100,51 @@ const Shops = ({ navigation }) => {
       </View>
       <Text style={styles.title}>All Shops</Text>
       {shopsList.length > 0 ? (
-        <FlatList
-          data={filteredShops}
-          keyExtractor={(item) => item.shopId}
-          numColumns={2}
-          renderItem={({ item }) => (
-            <View style={styles.shopWrapper}>
-              <TouchableOpacity
-              activeOpacity={0.8}
-                style={styles.shopContainer}
-                onPress={() =>
-                  navigation.navigate("Shop", { shopId: item.shopId })
-                }
-              >
-                <View style={styles.imageContainer}>
-                  <View style={styles.profileImageContainer}>
-                    <Image
-                      source={{
-                        uri: item.shopLogo,
-                        // uri: "https://cdn-icons-png.flaticon.com/128/3638/3638117.png",
-                      }}
-                      style={styles.profileImage}
-                    />
-                  </View>
-                  {item.isVerified && (
-                    <Octicons
-                      name="verified"
-                      size={20}
-                      color={PRIMARY_COLOR}
-                      style={styles.checkmark}
-                    />
-                  )}
-                </View>
-                <Text style={styles.shop}>{trimName(item.shopName, 12)}</Text>
-                <View style={styles.badgeContainer}>
-                  <IconMaterial
-                    name="location-on"
-                    size={18}
-                    color={COLORS.yellow}
-                  />
-                  <Text style={styles.badgeText}>{item?.shopLocation}</Text>
-                </View>
-              </TouchableOpacity>
-            </View>
-          )}
-        />
+       <FlatList
+       data={filteredShops}
+       keyExtractor={(item) => item.shopId}
+       numColumns={2}
+       showsVerticalScrollIndicator={false}
+       renderItem={({ item }) => (
+         <View style={styles.shopWrapper}>
+           <TouchableOpacity
+             activeOpacity={0.8}
+             style={styles.shopContainer}
+             onPress={() =>
+               navigation.navigate("Shop", { shopId: item.shopId })
+             }
+           >
+             <View style={styles.imageContainer}>
+               <View style={styles.profileImageContainer}>
+                 {renderShopLogo(item)}
+               </View>
+               {item.isVerified && (
+                 <Octicons
+                   name="verified"
+                   size={20}
+                   color={PRIMARY_COLOR}
+                   style={styles.checkmark}
+                 />
+               )}
+             </View>
+             <Text style={styles.shop}>{trimName(item.shopName, 12)}</Text>
+             <View style={styles.badgeContainer}>
+               <IconMaterial
+                 name="location-on"
+                 size={18}
+                 color={COLORS.yellow}
+               />
+               <Text style={styles.badgeText}>{item?.shopLocation}</Text>
+             </View>
+           </TouchableOpacity>
+         </View>
+       )}
+     />
       ) : (
         <Loader />
       )}
     </SafeAreaView>
+    </ScreenWrapper>
   );
 };
 
@@ -236,6 +261,17 @@ const styles = StyleSheet.create({
     color: COLORS.yellow,
     marginLeft: 5,
     fontSize: 12,
+  },
+  initialsContainer: {
+    backgroundColor: PRIMARY_COLOR,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius:50
+  },
+  initialsText: {
+    color: 'white',
+    fontSize: 24,
+    fontWeight: 'bold',
   },
 });
 

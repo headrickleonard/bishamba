@@ -1,26 +1,26 @@
-import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createStackNavigator } from "@react-navigation/stack";
+import { BlurView } from "expo-blur";
+import React from "react";
+import { Image, StyleSheet, View ,Platform} from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
-import HomeScreen from "../screens/HomeScreen";
-import DiagnoseScreen from "../screens/DetailsScreen";
+import CustomHeader from "../components/CustomHeader";
+import { transition } from "../config";
+import AccountScreen from "../screens/Account";
+import AskCommunity from "../screens/AskCommunity";
+import Auth from "../screens/Auth";
 import ScanScreen from "../screens/Camera";
 import PlantScanner from "../screens/PlantScanner";
-import AskCommunity from "../screens/AskCommunity";
-import ShopsScreen from "../screens/Ecommerce";
-import AccountScreen from "../screens/Account";
-import { Image, View, StyleSheet } from "react-native";
+import ScanHistory from "../screens/ScanHistory";
+import Threads from "../screens/Threads";
+import DiseaseDetails from "./../screens/DiseaseDetails";
 import CustomTabBar from "./CustomTabBar";
 import RootStack from "./index";
-import { BlurView } from "expo-blur";
-import Threads from "../screens/Threads";
-import CustomHeader from "../components/CustomHeader";
-import ScanHistory from "../screens/ScanHistory";
-import { transition } from "../config";
-import Auth from "../screens/Auth";
+import Details from "../screens/Details";
 
 const Tab = createBottomTabNavigator();
 const ScanStack = createStackNavigator();
+const DiagnoseStack = createStackNavigator();
 
 const ScanStackScreen = () => (
   <ScanStack.Navigator screenOptions={{ headerShown: false }}>
@@ -35,18 +35,26 @@ const ScanStackScreen = () => (
       component={AskCommunity}
       options={transition}
     />
-      <ScanStack.Screen
-        name="Auth"
-        component={Auth}
-        options={transition}
-      />
+    <ScanStack.Screen name="Auth" component={Auth} options={transition} />
+    <DiagnoseStack.Screen name="Details" component={Details}  options={transition}/>
+
   </ScanStack.Navigator>
 );
-
+const DiagnoseStackScreen = () => (
+  <DiagnoseStack.Navigator screenOptions={{ headerShown: false }}>
+    <DiagnoseStack.Screen name="Diagnose" component={ScanHistory} />
+    <DiagnoseStack.Screen
+      name="DiseaseDetails"
+      component={DiseaseDetails}
+      options={transition}
+    />
+    <DiagnoseStack.Screen name="Details" component={Details}  options={transition}/>
+  </DiagnoseStack.Navigator>
+);
 const BottomTabs = () => {
   return (
     <Tab.Navigator
-      initialRouteName="Home"
+      initialRouteName="HomeScreen"
       tabBar={(props) => <CustomTabBar {...props} />}
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
@@ -103,13 +111,20 @@ const BottomTabs = () => {
         tabBarInactiveTintColor: "#010101",
         tabBarShowLabel: false,
         tabBarHideOnKeyboard: true,
-        tabBarStyle: { height: 60 },
+        tabBarStyle: { 
+          height: 60,
+          backgroundColor: 'rgba(255, 255, 255, 0.8)', // Fallback color
+        },
         tabBarBackground: () => (
-          <BlurView
-            tint="default"
-            intensity={80}
-            style={StyleSheet.absoluteFill}
-          />
+          Platform.OS === 'ios' ? (
+            <BlurView
+              tint="light"
+              intensity={80}
+              style={StyleSheet.absoluteFill}
+            />
+          ) : (
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(255, 255, 255, 0.8)' }]} />
+          )
         ),
       })}
     >
@@ -126,7 +141,7 @@ const BottomTabs = () => {
       />
       <Tab.Screen
         name="Diagnose"
-        component={ScanHistory}
+        component={DiagnoseStackScreen}
         options={{
           headerShown: false,
           gestureEnabled: true,

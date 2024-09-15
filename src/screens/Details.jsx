@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   SafeAreaView,
@@ -9,6 +9,7 @@ import {
   Alert,
   ScrollView,
   ActivityIndicator,
+  Pressable
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import COLORS from "../const/colors";
@@ -25,62 +26,92 @@ import Animated, {
   FadeOutLeft,
   FadeInDown,
 } from "react-native-reanimated";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const DEFAULT_LOCATION = {
+  coords: {
+    latitude: -8.9175,
+    longitude: 33.4629
+  }
+};
 
 const Details = ({ navigation, route }) => {
   const { accessToken, logout } = useAuth();
-  const { product } = route.params || {};
+  const { product  } = route.params || {};
   const [value, setValue] = useState(1);
-  const [location, setLocation] = useState(null);
+  const [location, setLocation] = useState(DEFAULT_LOCATION);
   const [errorMsg, setErrorMsg] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [status, setStatus] = useState(null);
 
-  const getLocation = async () => {
+  const getLocation = useCallback(async (retryCount = 0) => {
     try {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        setErrorMsg("Permission to access location was denied");
-        Alert.alert("Permission Denied", "Please grant location access.");
-        return;
+        console.log("Location permission not granted");
+        return DEFAULT_LOCATION;
       }
 
-      let location = await Location.getCurrentPositionAsync({});
-      setLocation(location);
+      const lastKnownLocation = await AsyncStorage.getItem('lastKnownLocation');
+      if (lastKnownLocation) {
+        return JSON.parse(lastKnownLocation);
+      }
+
+      const locationPromise = Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Location request timed out')), 10000)
+      );
+
+      const newLocation = await Promise.race([locationPromise, timeoutPromise]);
+      
+      if (newLocation) {
+        await AsyncStorage.setItem('lastKnownLocation', JSON.stringify(newLocation));
+        return newLocation;
+      }
     } catch (error) {
       console.error("Error getting location:", error);
-      Alert.alert("Error", "Unable to get current location. Please try again.");
+      if (retryCount < 2) {
+        console.log(`Retrying... Attempt ${retryCount + 1}`);
+        return getLocation(retryCount + 1);
+      } else {
+        console.log("All location attempts failed. Using default location.");
+        return DEFAULT_LOCATION;
+      }
     }
-  };
+  }, []);
 
-  const handleConnect = () => {
+  useEffect(() => {
+    getLocation().then(newLocation => setLocation(newLocation));
+  }, [getLocation]);
+
+  const handleConnect = async () => {
     if (accessToken) {
-      sendNotificationToShopOwner();
+      await sendNotificationToShopOwner();
     } else {
       navigation.navigate("Auth", { returnScreen: "Details" });
     }
-    // logout()
   };
 
   const sendNotificationToShopOwner = async () => {
-    if (!location) {
-      Alert.alert("Error", "Unable to get current location. Please try again.");
-      await getLocation()
-      return;
-    }
+    setIsLoading(true);
+    let currentLocation = location || DEFAULT_LOCATION;
 
     const notificationData = {
       shopId: product?.shopId,
       productId: product?.id,
       quantity: value,
       totalPrice: product?.price * value,
-      userLocation: `Latitude: ${location.coords.latitude}, Longitude: ${location.coords.longitude}`,
+      userLocation: `Latitude: ${currentLocation.coords.latitude}, Longitude: ${currentLocation.coords.longitude}`,
       notificationChannel: "SMS",
       notificationType: "EXTERNAL",
-      imageUrl: product?.images?.image1,
+      // imageUrl: product?.images?.[0],
+      // shopName: product?.shopName,
     };
 
     try {
-      setIsLoading(true);
       setStatus(null);
       const response = await sendNotification(notificationData, accessToken);
       Toast.show({
@@ -93,20 +124,16 @@ const Details = ({ navigation, route }) => {
       navigation.goBack();
       console.log("Notification sent successfully:", response);
     } catch (error) {
-      console.error("Error sending notification:", error);
+      console.error("Error sending notification:", error.response.data.data);
       Toast.show({
         type: "error",
-        text1: "Failed to send notification.",
-        text2: "Please re-try if the issue persists visit our help center",
+        text1: error.response.data.data,
+        text2: "Please try again. If the issue persists, visit our help center.",
       });
     } finally {
       setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    getLocation();
-  }, []);
 
   return (
     <ScreenWrapper>
@@ -123,7 +150,7 @@ const Details = ({ navigation, route }) => {
           </View> */}
           <View style={styles.imageContainer}>
             <Image
-              source={{ uri: product?.images[0] }}
+              source={{ uri: product?.images?.[0] }}
               style={{ width: "100%", height: "100%", resizeMode: "contain" }}
             />
           </View>

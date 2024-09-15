@@ -16,8 +16,10 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "infoPlist": {
-        "NSCameraUsageDescription": "Allow $(PRODUCT_NAME) to access your camera"
+     "infoPlist": {
+        "NSCameraUsageDescription": "Allow $(PRODUCT_NAME) to access your camera",
+        "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to use your location for product delivery and shop recommendations.",
+        "NSLocationAlwaysUsageDescription": "Allow $(PRODUCT_NAME) to use your location for product delivery and shop recommendations."
       }
     },
     "android": {
@@ -25,8 +27,11 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "permissions": [
-        "android.permission.CAMERA"
+     "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.FOREGROUND_SERVICE"
       ],
       "package": "com.headrick.bishamba"
     },
@@ -35,7 +40,8 @@
     },
     "plugins": [
       "react-native-vision-camera",
-      "expo-localization"
+      "expo-localization",
+      "expo-location"
     ],
     "extra": {
       "eas": {

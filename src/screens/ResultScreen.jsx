@@ -10,7 +10,7 @@ const ResultScreen = ({ route }) => {
   const scrollY = useRef(new Animated.Value(0)).current;
   const { imageUrl, data } = route.params.details;
   useEffect(() => {
-    console.log("the route params are:" + JSON.stringify(route.params));
+    // console.log("the route params are:" + JSON.stringify(route.params));
   }, []);
 
   return (

@@ -21,6 +21,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import i18n from "../translations/i18n"; // Adjust the path if necessary
 import ScreenWrapper from "../components/shared/ScreenWrapper";
 import * as StoreReview from "expo-store-review";
+import * as Location from 'expo-location';
+
 import { useTheme } from "../contexts/ThemeContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigation } from "@react-navigation/native";
@@ -57,8 +59,7 @@ const getDefaultLanguage = async () => {
   return language ?? languages[0];
 };
 const handleContactUs = () => {
-  // You might want to use a mailto link or similar
-  Linking.openURL("mailto:joshuasimon@gmail.com");
+  Linking.openURL("mailto:joshuasimon656@gmail.com");
 };
 
 const handleRateApp = () => {
@@ -89,6 +90,7 @@ export default function Account() {
   const { theme, toggleTheme } = useTheme();
   const { userData, logout } = useAuth(); // Get userData from useAuth
   const navigation = useNavigation();
+  const [userLocation, setUserLocation] = useState("Loading...");
 
   const [visible, setVisible] = useState(false);
   const [form, setForm] = useState({
@@ -111,6 +113,89 @@ export default function Account() {
   useEffect(() => {
     setForm({ darkMode: theme === "dark" });
   }, [theme]);
+
+  useEffect(() => {
+    getUserLocation();
+  }, []);
+
+  const getUserLocation = async () => {
+    setUserLocation("Updating location...");
+    
+    try {
+      // First, try to get the last known location from storage
+      const storedLocation = await AsyncStorage.getItem('lastKnownLocation');
+      if (storedLocation) {
+        setUserLocation(JSON.parse(storedLocation));
+      }
+
+      // Check permission status
+      let { status } = await Location.getForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        status = await requestLocationPermission();
+        if (status !== 'granted') {
+          setUserLocation('Location permission not granted');
+          return;
+        }
+      }
+
+      // Try to get current location
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+        timeout: 15000, // 15 seconds timeout
+      });
+
+      const { latitude, longitude } = location.coords;
+      const address = await reverseGeocode(latitude, longitude);
+      
+      // Store the new location
+      await AsyncStorage.setItem('lastKnownLocation', JSON.stringify(address));
+      
+      setUserLocation(address);
+    } catch (error) {
+      console.error('Error getting location:', error);
+      handleLocationError(error);
+    }
+  };
+
+  const requestLocationPermission = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      return status;
+    } catch (err) {
+      console.error('Error requesting location permission:', err);
+      return 'error';
+    }
+  };
+
+  const reverseGeocode = async (latitude, longitude) => {
+    try {
+      let result = await Location.reverseGeocodeAsync({ latitude, longitude });
+
+      if (result.length > 0) {
+        const { city, region, country } = result[0];
+        return `${city || ''}, ${region || ''}, ${country || ''}`.replace(/^, /, '').replace(/, $/, '');
+      }
+      return 'Address not found';
+    } catch (error) {
+      console.error('Error in reverse geocoding:', error);
+      return 'Unable to get address';
+    }
+  };
+
+  const handleLocationError = (error) => {
+    if (error.code === 'E_LOCATION_SETTINGS_UNSATISFIED') {
+      Alert.alert(
+        'Location Services Disabled',
+        'Please enable location services in your device settings.',
+        [{ text: 'OK' }]
+      );
+      setUserLocation('Location services disabled');
+    } else if (error.code === 'E_TIMEOUT') {
+      setUserLocation('Location request timed out');
+    } else {
+      setUserLocation('Unable to get location');
+    }
+  };
 
   const changeLanguage = async (lang) => {
     setForm({ ...form, language: lang });
@@ -172,9 +257,9 @@ export default function Account() {
                     /* handle onPress */
                   }}
                 >
-                  <View style={styles.profileAction}>
+                  {/* <View style={styles.profileAction}>
                     <FeatherIcon color="#fff" name="edit-3" size={15} />
-                  </View>
+                  </View> */}
                 </TouchableOpacity>
               </View>
             </TouchableOpacity>
@@ -219,6 +304,7 @@ export default function Account() {
                   onValueChange={(darkMode) => {
                     setForm({ ...form, darkMode });
                     // toggleTheme(darkMode);
+                  
                   }}
                   value={form.darkMode}
                 />
@@ -226,9 +312,7 @@ export default function Account() {
 
               <TouchableOpacity
                 activeOpacity={0.8}
-                onPress={() => {
-                  /* handle onPress */
-                }}
+                onPress={getUserLocation}
                 style={styles.row}
               >
                 <View style={[styles.rowIcon, { backgroundColor: "#32c759" }]}>
@@ -237,7 +321,7 @@ export default function Account() {
 
                 <Text style={styles.rowLabel}>{t("location")}</Text>
                 <View style={styles.rowSpacer} />
-                <Text style={styles.rowValue}>Los Angeles, CA</Text>
+                <Text style={styles.rowValue}>{userLocation || "Tanzania"}</Text>
                 <FeatherIcon color="#C6C6C6" name="chevron-right" size={20} />
               </TouchableOpacity>
 

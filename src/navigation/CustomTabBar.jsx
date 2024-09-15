@@ -1,8 +1,6 @@
-// navigation/CustomTabBar.js
-import React from "react";
-import { View, TouchableOpacity, Image, StyleSheet } from "react-native";
 import { BottomTabBar } from "@react-navigation/bottom-tabs";
-import Icon from "react-native-vector-icons/MaterialCommunityIcons";
+import React from "react";
+import { StyleSheet, View } from "react-native";
 
 const CustomTabBar = (props) => {
   if (

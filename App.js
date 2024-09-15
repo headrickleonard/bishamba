@@ -1,21 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View, Alert } from "react-native";
-import { NavigationContainer } from "@react-navigation/native";
-import { Provider } from "react-native-paper";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
-import NetInfo from '@react-native-community/netinfo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import NetInfo from '@react-native-community/netinfo';
+import { NavigationContainer } from "@react-navigation/native";
+import { createStackNavigator } from '@react-navigation/stack';
+import { StatusBar } from "expo-status-bar";
 import * as Updates from 'expo-updates';
+import React, { useEffect, useState } from 'react';
+import { I18nextProvider } from 'react-i18next';
+import { Alert } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { Provider } from "react-native-paper";
+import Toast from 'react-native-toast-message';
+import { AuthProvider } from './src/contexts/AuthContext';
+import { ThemeProvider } from './src/contexts/ThemeContext';
+import BottomTabs from './src/navigation/BottomTabs';
 import NoInternetScreen from './src/screens/NoInternetScreen';
 import OnboardingScreen from './src/screens/OnboardingScreen';
-import BottomTabs from './src/navigation/BottomTabs';
-import { AuthProvider } from './src/contexts/AuthContext';
-import Toast from 'react-native-toast-message';
-import { createStackNavigator } from '@react-navigation/stack';
-import { I18nextProvider } from 'react-i18next';
 import i18n from './src/translations/i18n';
-import { ThemeProvider } from './src/contexts/ThemeContext';
 
 const Stack = createStackNavigator();
 
@@ -122,6 +122,3 @@ export default function App() {
   );
 }
 
-const styles = StyleSheet.create({
-  // Add your styles here
-});

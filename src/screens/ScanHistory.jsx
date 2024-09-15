@@ -11,6 +11,7 @@ import {
   View,
   RefreshControl,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { sendPredictionIds } from "../api/index";
 import { getPlantIds } from "../utils";
@@ -18,6 +19,7 @@ import { getPlantIds } from "../utils";
 const ScanHistory = ({ navigation }) => {
   const [search, setSearch] = useState("");
   const [diseasePredictions, setDiseasePredictions] = useState([]);
+  const [filteredPredictions, setFilteredPredictions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -29,6 +31,7 @@ const ScanHistory = ({ navigation }) => {
       if (ids.length === 0) {
         console.log("No scan history found");
         setDiseasePredictions([]);
+        setFilteredPredictions([]);
         return;
       }
       const response = await sendPredictionIds(ids);
@@ -39,6 +42,7 @@ const ScanHistory = ({ navigation }) => {
           Alert.alert("No History", "You haven't scanned any plants yet.");
         } else {
           setDiseasePredictions(response[0].data);
+          setFilteredPredictions(response[0].data);
         }
       } else {
         console.error("Unexpected response format:", response);
@@ -62,20 +66,33 @@ const ScanHistory = ({ navigation }) => {
     setRefreshing(false);
   }, [fetchScanHistory]);
 
-  const handleSearch = () => {
-    // Implement search functionality here
-    console.log("Searching for:", search);
-  };
+  const handleSearch = useCallback(() => {
+    if (search.trim() === "") {
+      setFilteredPredictions(diseasePredictions);
+    } else {
+      const filtered = diseasePredictions.filter(
+        (item) =>
+          item.commonName.toLowerCase().includes(search.toLowerCase()) ||
+          item.comment.toLowerCase().includes(search.toLowerCase())
+      );
+      setFilteredPredictions(filtered);
+    }
+  }, [search, diseasePredictions]);
+
+  useEffect(() => {
+    handleSearch();
+  }, [search, handleSearch]);
 
   const DiseaseCard = ({ item }) => (
     <TouchableOpacity
       style={styles.card}
+      activeOpacity={0.8}
       onPress={() => navigation.navigate('DiseaseDetails', { disease: item })}
     >
       <Image
         style={styles.image}
         source={{ uri: item.analyzedImage }}
-        defaultSource={require('../assets/images/plant1.png')} // Add a placeholder image
+        defaultSource={require('../assets/images/plant1.png')}
       />
       <View style={styles.textContainer}>
         <Text style={styles.title}>{item.commonName}</Text>
@@ -95,25 +112,14 @@ const ScanHistory = ({ navigation }) => {
           value={search}
           onChangeText={setSearch}
         />
-        <TouchableOpacity onPress={handleSearch} style={styles.searchButton}>
-          <Text style={styles.searchButtonText}>Search</Text>
-        </TouchableOpacity>
       </View>
 
-      {loading && <Text style={styles.loadingText}>Loading...</Text>}
-
-      {/* {!loading && diseasePredictions.length === 0 && (
-        <View style={styles.emptyStateContainer}>
-          <Ionicons name="leaf-outline" size={64} color="gray" />
-          <Text style={styles.emptyStateText}>No scan history found</Text>
-          <Text style={styles.emptyStateSubtext}>Start scanning plants to build your history!</Text>
-        </View>
-      )} */}
+      {loading && <ActivityIndicator size="large" color="#0000ff" style={styles.loadingIndicator} />}
 
       <FlatList
-        data={diseasePredictions}
+        data={filteredPredictions}
         renderItem={({ item }) => <DiseaseCard item={item} />}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.diseaseId.toString()}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -235,6 +241,9 @@ const styles = StyleSheet.create({
     color: '#777',
     marginTop: 10,
     textAlign: 'center',
+  },
+  loadingIndicator: {
+    marginTop: 20,
   },
 });
 

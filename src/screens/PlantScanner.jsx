@@ -70,42 +70,47 @@ const PlantScanner = ({ route, navigation }) => {
     })();
   }, []);
 
+
   const handleScan = useCallback(async () => {
     if (!selectedPlant) {
       refRBSheet.current.open();
       return;
     }
-
+  
     setIsScanning(true);
     setStatus("Analyzing plant...");
     progress.value = withTiming(0.33, { duration: 1000 });
     buttonScale.value = withSpring(0.95);
     imageScale.value = withRepeat(withTiming(1.05, { duration: 1000 }), -1, true);
     blurIntensity.value = withTiming(1, { duration: 500 });
-
+  
     try {
       setStatus("Uploading to server...");
       progress.value = withTiming(0.66, { duration: 1000 });
-
+  
       const imageUrl = await uploadImageForPrediction(photoUri);
       setStatus("Generating report...");
       const predictionData = await makePrediction(selectedPlant.id, imageUrl);
-
+  
       if (predictionData.status === "failed") {
         throw new Error(predictionData.message || "Scan failed");
       }
-
-      console.log("the prediction results are:", predictionData.data);
-      console.log("the disease id here is:", predictionData.data.diseaseId);
+  
+      console.log("the prediction results are:", predictionData?.data);
       
-      storePlantId(predictionData.data.diseaseId);
-
+      if (predictionData.data && predictionData.data.predictionId) {
+        console.log("the disease id here is:", predictionData.data.predictionId);
+        await storePlantId(predictionData.data.predictionId);
+      } else {
+        console.warn("diseaseId is missing from the prediction data");
+      }
+  
       progress.value = withTiming(1, { duration: 1000 });
-
+  
       setTimeout(() => {
         setStatus("Plant identified!");
         buttonScale.value = withSpring(1);
-
+  
         setTimeout(() => {
           setIsScanning(false);
           progress.value = withTiming(0, { duration: 500 }, () => {

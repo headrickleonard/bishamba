@@ -22,6 +22,7 @@ import { PRIMARY_COLOR } from "../styles/styles";
 import { formatTZSCurrency } from "../utils";
 import NoProducts from "../components/empty/NoProducts";
 import { useTranslation } from "react-i18next";
+import Toast from "react-native-toast-message";
 
 const width = Dimensions.get("window").width / 2 - 30;
 
@@ -106,7 +107,7 @@ const HomeScreen = ({ navigation }) => {
     }
   
     if (searchQuery) {
-      console.log("Filtering for search query:", searchQuery);
+      // console.log("Filtering for search query:", searchQuery);
       filtered = filtered.filter((product) =>
         product.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
@@ -147,7 +148,7 @@ const HomeScreen = ({ navigation }) => {
   const Card = ({ product }) => {
     // Early return if product is null or undefined
     if (!product) {
-        return null; // or return a placeholder component
+        return null; 
     }
 
     const [imageSource, setImageSource] = useState({
@@ -228,6 +229,14 @@ const HomeScreen = ({ navigation }) => {
     );
 };
 
+const showNotification=()=>{
+  Toast.show({
+    type: "info",
+    text1: "You don't have any notifications yet!",
+    visibilityTime: 5000,
+  });
+}
+
   return (
     <ScreenWrapper>
       <SafeAreaView
@@ -245,7 +254,7 @@ const HomeScreen = ({ navigation }) => {
               Bishamba
             </Text>
           </View>
-          <Pressable onPress={() => navigation.navigate("Notifications")}>
+          <Pressable onPress={showNotification}>
             <Icon name="notifications" size={28} color={"gray"} />
           </Pressable>
         </View>

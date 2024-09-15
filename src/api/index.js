@@ -71,6 +71,27 @@ export const detectDisease = async (imageUrl, setDiseaseResult) => {
 };
 
 /**
+ * Fetches disease information based on the provided ID or code.
+ *
+ * @param {string} idOrCode - The disease ID or code to search for.
+ * @returns {Promise<Object>} - A promise that resolves to the disease data.
+ * @throws {Error} - Throws an error if the request fails or the disease is not found.
+ */
+export async function getDiseaseData(idOrCode) {
+    const BASE_URL = 'https://api.bishamba.kibuti.co.tz/api/v1/diseases-mng/single-disease';
+
+    try {
+        const response = await axios.get(BASE_URL, {
+            params: { idOrCode: idOrCode },
+        });
+
+        return response.data;
+    } catch (error) {
+        throw new Error(`Error fetching disease data: ${error.response?.status} - ${error.response?.statusText || error.message}`);
+    }
+}
+
+/**
  * Fetch all products (agrochemicals)
  * @returns {Promise<object[]>} - The list of products
  */
